@@ -70,12 +70,27 @@
                     <label for="settingAutosaveInterval" id="settingAutosaveIntervalCurrentValue"></label>
                 </div>
             </div>
+            <div class="settingsBox">
+                <div id="settingsResetSaveInitialDiv">
+                    <label for="settingsResetSaveButton" style="color:red;">This will completely restart your entire save from 0. No coming back.</label>
+                    <div>
+                        <button id="settingsResetSaveButton" style="background-color:lightcoral;">Reset Save</button>
+                    </div>
+                </div>
+                <div id="settingsResetSaveConfirmDiv" style="display:none;">
+                    <label for="settingsResetConfirm" style="color:red; font-weight: bolder;">Are you sure?</label>
+                    <div>
+                        <button id="settingsResetNevermind" style="background-color:lightgreen;">Nevermind</button>
+                        <button id="settingsResetConfirm" style="background-color:red;">Reset Save</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- Dev To-Do Div -->
         <div id="devToDoDiv" style="display:none;">
             <h1>Dev To-Do List</h1>
             <ol>
-                <li>Remember last opened page</li>
+                
                 <li>Rework currency gain to include a base, and multipliers applied afterwards - based on upgrades.</li>
                 <ul>
                     <li>??Need to decide on either having resource generation per second or per tick</li>
@@ -89,17 +104,19 @@
                 </ul>
             </ol>
             <h1>Dev Done List</h1>
-            <ol>
-                <li style="text-decoration:line-through;">Save System</li>
-                <ul style="text-decoration:line-through;">
+            <ul style="text-decoration:line-through;">
+                <li>Remember last opened page</li>
+                <li >Save System</li>
+                <ul>
                     <li>Add autosave system</li>
                     <ul>
                         <li>Enable/Disable option</li>
                         <li>Interval setting</li>
                     </ul>
                     <li>Manual save button</li>
+                    <li>Save reset button</li>
                 </ul>
-            </ol>
+            </ul>
         </div>
     </body>
 </html>

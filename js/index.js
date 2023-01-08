@@ -6,39 +6,105 @@ $(function() {
     const MIN_AUTOSAVE_INTERVAL = 1000;
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
+    const SAVEFILE_VERSION = 1;
+
+    const HOME = "home";
+    const SHOP = "shop";
+    const SETTINGS = "settings";
+    const DEVTODO = "devtodo";
 
     var autosaveTimer;
+
+    var pageSwitchLocked = false;
+
+    var currentPage = HOME;
+    
+    var homeLink = $("#homeLink");
+    var shopLink = $("#shopLink");
+    var settingsLink = $("#settingsLink");
+    var devToDoLink = $("#devToDoLink");
+
+    var homeDiv = $("#mainDiv");
+    var shopDiv = $("#shopDiv");
+    var settingsDiv = $("#settingsDiv");
+    var devToDoDiv = $("#devToDoDiv");
 
     // Attempt to load save data
     saveCookie = getCookie("save");
 
     if(saveCookie == "") {
         save = {
-            mainCurrency: 0,
-            autoSaveEnabled: true,
-            autoSaveInterval: DEF_AUTOSAVE_INTERVAL
+            currencies: {
+                mainCurrency: 0,
+            },
+            lastOpenPage: HOME,
+            lastSaved: new Date(),
+            settings: {
+                autoSaveEnabled: true,
+                autoSaveInterval: DEF_AUTOSAVE_INTERVAL
+            },
+            version: SAVEFILE_VERSION
         };
     } else {
         save = JSON.parse(saveCookie);
+        
+        // Update old save files
+        if(save.version == undefined || save.version < SAVEFILE_VERSION) {
+            // Fix if save was from before currencies were separate JSON object
+            if(save.currencies == undefined) {
+                save.currencies = {
+                    mainCurrency: save.mainCurrency
+                }
+
+                delete save.mainCurrency;
+            }
+
+            // Fix if save was from before settings were separate JSON object
+            if(save.settings == undefined) {
+                save.settings = {
+                    autoSaveEnabled: save.autoSaveEnabled,
+                    autoSaveInterval: save.autoSaveInterval
+                };
+
+                delete save.autoSaveEnabled;
+                delete save.autoSaveInterval;
+            }
+
+            // Set last open page to home if no other
+            if(save.lastOpenPage == undefined) {
+                save.lastOpenPage = HOME;
+            }
+
+            // Set save date if no other
+            if(save.lastSaved == undefined) {
+                save.lastSaved = new Date();
+            }
+
+            // Save is up to date
+            save.version = SAVEFILE_VERSION;
+        }
+
+        // Goto last open page
+        switchToPage(save.lastOpenPage, 0);
     }
 
     // Restore settings from save data
-    $("#settingAutosaveEnabled").prop("checked", save.autoSaveEnabled);
+    $("#settingAutosaveEnabled").prop("checked", save.settings.autoSaveEnabled);
     
     // Auto-save
     // Autosave every 15 seconds - save to cookies
     // Set interval to 15 seconds (15000 milliseconds)
-    if(save.autoSaveInterval === undefined || 
-        save.autoSaveInterval < MIN_AUTOSAVE_INTERVAL || 
-        save.autoSaveInterval > MAX_AUTOSAVE_INTERVAL) {
-        save.autoSaveInterval = 15000;
+    if(save.settings.autoSaveInterval === undefined || 
+        save.settings.autoSaveInterval < MIN_AUTOSAVE_INTERVAL || 
+        save.settings.autoSaveInterval > MAX_AUTOSAVE_INTERVAL) {
+        save.settings.autoSaveInterval = 15000;
     }
 
-    if(save.autoSaveEnabled) {
+    if(save.settings.autoSaveEnabled) {
         // Call the function every 15 seconds
         autosaveTimer = setInterval(function() {
             saveGameData(true);
-        }, save.autoSaveInterval);
+        }, save.settings.autoSaveInterval);
     }
 
     function saveGameData(isAutoSave) {
@@ -46,6 +112,10 @@ $(function() {
             console.log("Autosaving...");
         }
         
+        save.lastSaved = new Date();
+        save.lastOpenPage = currentPage;
+        save.version = SAVEFILE_VERSION;
+
         setCookie("save", JSON.stringify(save), 1);
         
         console.log("Save finished. Data:");
@@ -76,25 +146,6 @@ $(function() {
     }
 
     // Navbar code
-    const HOME = "home";
-    const SHOP = "shop";
-    const SETTINGS = "settings";
-    const DEVTODO = "devtodo";
-
-    var pageSwitchLocked = false;
-
-    var currentPage = HOME;
-    
-    var homeLink = $("#homeLink");
-    var shopLink = $("#shopLink");
-    var settingsLink = $("#settingsLink");
-    var devToDoLink = $("#devToDoLink");
-
-    var homeDiv = $("#mainDiv");
-    var shopDiv = $("#shopDiv");
-    var settingsDiv = $("#settingsDiv");
-    var devToDoDiv = $("#devToDoDiv");
-
     homeLink.on("click", function() {
         // Remove active class from all li in nav
         switchToPage(HOME);
@@ -116,11 +167,15 @@ $(function() {
         $(this).parent().addClass("active");
     });
 
-    function switchToPage(target) {
+    function switchToPage(target, animLength) {
         if(!pageSwitchLocked) {
             if(currentPage != target) {
                 // Lock page switch
                 pageSwitchLocked = true;
+                
+                if(animLength === undefined) {
+                    animLength = 400;
+                }
 
                 // Remove active classes from all links
                 $("nav").find("li").removeClass("active");
@@ -130,52 +185,68 @@ $(function() {
                     case HOME:
                         homeDiv.slideToggle({
                             complete: function() {
-                                doTheShow();
-                            }
+                                doTheShow(animLength);
+                            },
+                            duration: animLength
                         });
                         break;
                     case SHOP:
                         shopDiv.slideToggle({
                             complete: function() {
-                                doTheShow();
-                            }
+                                doTheShow(animLength);
+                            },
+                            duration: animLength
                         });
                         break;
                     case SETTINGS:
                         settingsDiv.slideToggle({
                             complete: function() {
-                                doTheShow();
-                            }
+                                doTheShow(animLength);
+                            },
+                            duration: animLength
                         });
                         break;
                     case DEVTODO:
                         devToDoDiv.slideToggle({
                             complete: function() {
-                                doTheShow();
-                            }
+                                doTheShow(animLength);
+                            },
+                            duration: animLength
                         });
                         break;
                 }
     
-                function doTheShow() {
+                function doTheShow(animLength) {
+                    if(animLength === undefined) {
+                        animLength = 400;
+                    }
+
                     // Show the target page
                     switch(target) {
                         case HOME:
                             console.log('Switching to Home page.');
                             homeDiv.parent
-                            homeDiv.slideToggle();
+                            homeDiv.slideToggle({
+                                duration: animLength
+                            });
                             break;
                         case SHOP:
                             console.log('Switching to Shop page.');
-                            shopDiv.slideToggle();
+                            shopDiv.slideToggle({
+                                duration: animLength
+                            });
                             break;
                         case SETTINGS:
                             console.log('Switching to Settings page.');
-                            settingsDiv.slideToggle();
+                            settingsDiv.slideToggle({
+                                duration: animLength
+                            });
                             break;
                         case DEVTODO:
                             console.log('Switching to Dev To-Do page.');
-                            devToDoDiv.slideToggle();
+                            devToDoDiv.slideToggle({
+                                duration: animLength
+                            });
                             break;
                     }
     
@@ -184,6 +255,11 @@ $(function() {
 
                     // Unlock page switching
                     pageSwitchLocked = false;
+
+                    // Autosave for accurate page remembering
+                    if(save.settings.autoSaveEnabled) {
+                        saveGameData();
+                    }
                 }
             }
         }
@@ -211,7 +287,7 @@ $(function() {
     var autosaveDisabledFlavorText = $(".autosaveDisabledFlavorText");
     var settingAutosaveIntervalDiv = $("#settingAutosaveIntervalDiv");
     
-    if(save.autoSaveEnabled) {
+    if(save.settings.autoSaveEnabled) {
         autosaveDisabledFlavorText.hide();
         settingAutosaveIntervalDiv.show();
     } else {
@@ -221,14 +297,14 @@ $(function() {
 
     settingAutosaveEnabled.on("click", function() {
         console.log("Autosave enabled: " + settingAutosaveEnabled.prop("checked"));
-        save.autoSaveEnabled = settingAutosaveEnabled.prop("checked");
-        settingAutosaveInterval.prop("disabled", !save.autoSaveEnabled);
+        save.settings.autoSaveEnabled = settingAutosaveEnabled.prop("checked");
+        settingAutosaveInterval.prop("disabled", !save.settings.autoSaveEnabled);
         settingAutosaveIntervalDiv.slideToggle();
 
-        if(save.autoSaveEnabled) {
+        if(save.settings.autoSaveEnabled) {
             autosaveTimer = setInterval(() => {
                 saveGameData();
-            }, save.autoSaveInterval);
+            }, save.settings.autoSaveInterval);
 
             autosaveDisabledFlavorText.slideToggle();
         } else {
@@ -243,9 +319,9 @@ $(function() {
     var settingAutosaveInterval = $("#settingAutosaveInterval");
     var settingAutosaveIntervalCurrentValue = $("#settingAutosaveIntervalCurrentValue");
 
-    settingAutosaveInterval.prop("disabled", !save.autoSaveEnabled);
-    settingAutosaveInterval.val(save.autoSaveInterval / 1000);
-    settingAutosaveIntervalCurrentValue.text((save.autoSaveInterval / 1000) + " second" + (save.autoSaveInterval / 1000 != 1 ? "s" : ""));
+    settingAutosaveInterval.prop("disabled", !save.settings.autoSaveEnabled);
+    settingAutosaveInterval.val(save.settings.autoSaveInterval / 1000);
+    settingAutosaveIntervalCurrentValue.text((save.settings.autoSaveInterval / 1000) + " second" + (save.settings.autoSaveInterval / 1000 != 1 ? "s" : ""));
 
     settingAutosaveInterval.on("input", function() {
         var value = $(this).val();
@@ -256,7 +332,7 @@ $(function() {
         var value = $(this).val();
         
         // Update save data
-        save.autoSaveInterval = value * 1000;
+        save.settings.autoSaveInterval = value * 1000;
 
         // Clear old interval
         clearInterval(autosaveTimer);
@@ -264,21 +340,43 @@ $(function() {
         // Set new interval
         autosaveTimer = setInterval(() => {
             saveGameData(true);
-        }, save.autoSaveInterval);
+        }, save.settings.autoSaveInterval);
 
         console.log("Autosave interval has been changed to: " + value + " second" + (value != 1 ? "s" : ""));
+    });
+
+    // Reset save code
+    var settingsResetSaveInitialDiv = $("#settingsResetSaveInitialDiv");
+    var settingsResetSaveButton = $("#settingsResetSaveButton");
+    var settingsResetSaveConfirmDiv = $("#settingsResetSaveConfirmDiv");
+    var settingsResetConfirm = $("#settingsResetConfirm");
+    var settingsResetNevermind = $("#settingsResetNevermind");
+
+    settingsResetSaveButton.on("click", function() {
+        settingsResetSaveInitialDiv.slideToggle();
+        settingsResetSaveConfirmDiv.slideToggle();
+    });
+
+    settingsResetNevermind.on("click", function() {
+        settingsResetSaveInitialDiv.slideToggle();
+        settingsResetSaveConfirmDiv.slideToggle();
+    });
+
+    settingsResetConfirm.on("click", function() {
+        setCookie("save", "", -1);
+        location.reload();
     });
 
     /* Main Currency Button Code */
     var lblMainCurrencyText = $("#navMainCurrency");
     var btnClickMe = $("#btnClickMe");
 
-    lblMainCurrencyText.text(save.mainCurrency + MAIN_CURRENCY_ABBR);
+    lblMainCurrencyText.text(save.currencies.mainCurrency + MAIN_CURRENCY_ABBR);
 
     btnClickMe.on("click", addMainCurrency);
 
     function addMainCurrency() {
-        save.mainCurrency += 1;
-        lblMainCurrencyText.text(save.mainCurrency + MAIN_CURRENCY_ABBR);
+        save.currencies.mainCurrency += 1;
+        lblMainCurrencyText.text(save.currencies.mainCurrency + MAIN_CURRENCY_ABBR);
     }
 })
