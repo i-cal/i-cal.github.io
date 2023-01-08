@@ -1,3 +1,7 @@
+.finishedDevToDo {
+    text-decoration: line-through;
+}
+
 nav {
     background-color: #AFAFAF;
     padding: 10px;
@@ -36,4 +40,21 @@ nav {
 
 small {
     font-style: italic;
+}
+
+.shopBox {
+    display: block;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    box-shadow: 0px 0px 6px gray;
+}
+
+.shopItem {
+    display: block;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 1px black;
 }

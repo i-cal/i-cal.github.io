@@ -42,7 +42,44 @@
         </div>
         <!-- Shop Div -->
         <div id="shopDiv" style="display:none;">
-            <h1>Welcome to the shop!</h1>
+            <div style="margin:auto; display:block; width:50%; text-align: center;">
+                <h1>Welcome to the shop!</h1>
+                <small>Now with things to shop for!</small>
+            </div>
+            <div class="container" style="padding-top:30px;">
+                <div class="row">
+                    <div class="col-5 px-15 shopBox">
+                        <h3>Click Upgrades</h3>
+                        <div class="shopItem clickUpgradeDiv">
+                            <div style="display:block;">
+                                <label for="buyClickUpgradeButton">Upgrade your clicking power by x2!</label>
+                                <small id="firstClickDoublersCount">0/10</small>
+                            </div>
+                            <div>
+                                <button id="buyClickUpgradeButton">Buy</button>
+                                <small id="clickUpgradeIncreaseFlavorText" style="display:none;"></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2"></div>
+                    <div class="col-5 px-15 shopBox">
+                        <h3>Idle Generation</h3>
+                        <div class="shopItem tier1MainGenDiv">
+                            <div style="display:block;">
+                                <label for="buyTier1MainGenButton">Tier 1 Main Generator</label>
+                                <small id="tier1MainGenCountText">0/10</small>
+                            </div>
+                            <div>
+                                <small id="tier1MainGenDescriptionText">Increases idle production by 1000u/s</small>
+                            </div>
+                            <div>
+                                <button id="buyTier1MainGenButton">Buy</button>
+                                <small id="tier1MainGenIncreaseFlavorText" style="display:none;"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- Settings  -->
         <div id="settingsDiv" style="display:none;">
@@ -70,6 +107,16 @@
                     <label for="settingAutosaveInterval" id="settingAutosaveIntervalCurrentValue"></label>
                 </div>
             </div>
+            <div id="settingTickRateDiv" class="settingsBox">
+                <label for="settingCustomTickRateAllowed">Custom Tick Rate (ms)</label>
+                <small>(could help/hinder performance)</small>
+                <div>
+                    <input type="checkbox" id="settingCustomTickRateAllowed">
+                    <input type="number" min="16" max="1000" value="50" step="1" id="settingCustomTickRate" style="display:none;">
+                    <button id="saveNewCustomTickrateButton" style="display:none;">Save</button>
+                    <small id="settingCustomTickRateFlavorText" style="display:none;"></small>
+                </div>
+            </div>
             <div class="settingsBox">
                 <div id="settingsResetSaveInitialDiv">
                     <label for="settingsResetSaveButton" style="color:red;">This will completely restart your entire save from 0. No coming back.</label>
@@ -90,21 +137,40 @@
         <div id="devToDoDiv" style="display:none;">
             <h1>Dev To-Do List</h1>
             <ol>
-                
-                <li>Rework currency gain to include a base, and multipliers applied afterwards - based on upgrades.</li>
-                <ul>
-                    <li>??Need to decide on either having resource generation per second or per tick</li>
-                    <li>??Every tick: gain = ceil((currency per second) / (tick rate in ms))</li>
-                    <li>??Tick interval option in settings (text box) - min 16ms, max 1000ms, default 50ms</li>
-                </ul>
                 <li>Make the shop have things to shop for</li>
                 <ul>
-                    <li>Currency generators</li>
                     <li>Click multipliers</li>
+                    <ul>
+                        <li class="finishedDevToDo">Double your clicks, up to x1024 (10 upgrades)</li>
+                        <li>Add a portion of idle generation back into clicks (5 upgrades, up to 50% maybe)</li>
+                    </ul>
+                    <li>Currency generators</li>
+                    <ul>
+                        <li>Tier 1 Main Generator</li>
+                        <ul>
+                            <li>Up to 10 upgrades</li>
+                            <li>Generates from 1k to 256k fully upgraded</li>
+                        </ul>
+                        <li>Tier 2 Main Generator</li>
+                        <li>Tier 3 Main Generator</li>
+                    </ul>
+                    <li>Hide upgrades when they are maxed</li>
                 </ul>
+                <li>Offline progress</li>
             </ol>
             <h1>Dev Done List</h1>
-            <ul style="text-decoration:line-through;">
+            <ul class="finishedDevToDo">
+                <li>Rework currency gain to include a base, and multipliers applied afterwards - based on upgrades.</li>
+                <ul>
+                    <li>Show gain per second next to currency as "+([gain]/s)"</li>
+                    <li>Show gain per click as "+([click]/c)"</li>
+                    <li>Every tick: gain = (currency per second / 1000) * (tick rate in ms)</li>
+                    <li>Tick interval option in settings (text box) - min 16ms, max 1000ms, default 50ms</li>
+                </ul>
+                <li>Once tick update rate system is in place:</li>
+                <ul>
+                    <li>Disable/enable shop buy buttons when user can afford</li>
+                </ul>
                 <li>Remember last opened page</li>
                 <li >Save System</li>
                 <ul>

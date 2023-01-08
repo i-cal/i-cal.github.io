@@ -6,12 +6,17 @@ $(function() {
     const MIN_AUTOSAVE_INTERVAL = 1000;
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
-    const SAVEFILE_VERSION = 1;
+    const SAVEFILE_VERSION = 5;
 
     const HOME = "home";
     const SHOP = "shop";
     const SETTINGS = "settings";
     const DEVTODO = "devtodo";
+
+    const MAX_FIRST_CLICK_DOUBLER = 10;
+    const MAX_TIER_1_GENS = 10;
+
+    var tickInterval;
 
     var autosaveTimer;
 
@@ -37,11 +42,23 @@ $(function() {
             currencies: {
                 mainCurrency: 0,
             },
+            generation: {
+                clickPower: 1,
+                firstClickDoublers: 0,
+                mainPerSecond: 0,
+                mainProdMult: 1,
+                firstMainGenerators: 0,
+                firstMainGeneratorPower: 0,
+                secondMainGenerators: 0,
+                thirdMainGenerators: 0
+            },
             lastOpenPage: HOME,
             lastSaved: new Date(),
             settings: {
                 autoSaveEnabled: true,
-                autoSaveInterval: DEF_AUTOSAVE_INTERVAL
+                autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
+                tickRate: 50,
+                customTickRateAllowed: false
             },
             version: SAVEFILE_VERSION
         };
@@ -50,6 +67,18 @@ $(function() {
         
         // Update old save files
         if(save.version == undefined || save.version < SAVEFILE_VERSION) {
+            fixSaveFiles(save);
+
+            // Save is up to date
+            save.version = SAVEFILE_VERSION;
+        }
+
+        // Goto last open page
+        switchToPage(save.lastOpenPage, 0);
+    }
+
+    function fixSaveFiles(saveData) {
+        if(saveData.version === undefined || saveData.version < SAVEFILE_VERSION) {
             // Fix if save was from before currencies were separate JSON object
             if(save.currencies == undefined) {
                 save.currencies = {
@@ -70,22 +99,44 @@ $(function() {
                 delete save.autoSaveInterval;
             }
 
-            // Set last open page to home if no other
+            // Set last open page to home
             if(save.lastOpenPage == undefined) {
                 save.lastOpenPage = HOME;
             }
 
-            // Set save date if no other
+            // Set save date
             if(save.lastSaved == undefined) {
                 save.lastSaved = new Date();
             }
 
-            // Save is up to date
-            save.version = SAVEFILE_VERSION;
-        }
+            // If before shop & generation update, generation attributes need to be added
+            if(save.generation == undefined) {
+                save.generation = {
+                    clickPower: 1,
+                    firstClickDoublers: 0,
+                    mainPerSecond: 0,
+                    mainProdMult: 1,
+                    firstMainGenerators: 0,
+                    secondMainGenerators: 0,
+                    thirdMainGenerators: 0
+                };
+            }
 
-        // Goto last open page
-        switchToPage(save.lastOpenPage, 0);
+            // Version < 3
+            if(save.settings.tickRate == undefined) {
+                save.settings.tickRate = 50;
+            }
+
+            // Version < 4
+            if(save.generation.firstMainGeneratorPower == undefined) {
+                save.generation.firstMainGeneratorPower = 0;
+            }
+
+            // Version < 5
+            if(save.settings.customTickRateAllowed == undefined) {
+                save.settings.customTickRateAllowed = false;
+            }
+        }
     }
 
     // Restore settings from save data
@@ -115,6 +166,8 @@ $(function() {
         save.lastSaved = new Date();
         save.lastOpenPage = currentPage;
         save.version = SAVEFILE_VERSION;
+
+        save.currencies.mainCurrency = Math.floor(save.currencies.mainCurrency);
 
         setCookie("save", JSON.stringify(save), 1);
         
@@ -345,6 +398,67 @@ $(function() {
         console.log("Autosave interval has been changed to: " + value + " second" + (value != 1 ? "s" : ""));
     });
 
+    // Custom tick rate
+    var settingCustomTickRateAllowed = $("#settingCustomTickRateAllowed");
+    var settingCustomTickRate = $("#settingCustomTickRate");
+    var saveNewCustomTickrateButton = $("#saveNewCustomTickrateButton");
+    var settingCustomTickRateFlavorText = $("#settingCustomTickRateFlavorText");
+
+    settingCustomTickRateAllowed.prop("checked", save.settings.customTickRateAllowed);
+
+    if(save.settings.customTickRateAllowed) {
+        settingCustomTickRate.show();
+        saveNewCustomTickrateButton.show();
+    }
+
+    settingCustomTickRate.prop("disabled", !save.settings.customTickRateAllowed);
+    settingCustomTickRate.val(save.settings.tickRate);
+
+    saveNewCustomTickrateButton.prop("disabled", !save.settings.customTickRateAllowed);
+
+    settingCustomTickRateAllowed.on("click", function() {
+        settingCustomTickRate.prop("disabled", false);
+        settingCustomTickRate.slideToggle();
+        
+        saveNewCustomTickrateButton.prop("disabled", false);
+        saveNewCustomTickrateButton.slideToggle();
+
+        save.settings.customTickRateAllowed = settingCustomTickRateAllowed.prop("checked");
+
+        if(save.settings.customTickRateAllowed == false) {
+            save.settings.tickRate = 50;
+            settingCustomTickRate.val(save.settings.tickRate);
+            resetTickInterval();
+            console.log("Custom tick rate disabled.");
+        } else {
+            console.log("Custom tick rate enabled.");
+        }
+
+        saveGameData();
+    });
+
+    saveNewCustomTickrateButton.on("click", function() {
+        var newTickRate = settingCustomTickRate.val();
+
+        settingCustomTickRateFlavorText.text("Tick rate updated.");
+        settingCustomTickRateFlavorText.slideToggle();
+        saveNewCustomTickrateButton.prop("disabled", true);
+
+        var anim = setInterval(() => {
+            settingCustomTickRateFlavorText.slideToggle();
+            saveNewCustomTickrateButton.prop("disabled", false);
+            clearInterval(anim);
+        }, 3000);
+        
+        save.settings.tickRate = newTickRate;
+
+        resetTickInterval();
+
+        console.log(`Tick rate has been changed to ${newTickRate}ms.`);
+
+        saveGameData();
+    });
+
     // Reset save code
     var settingsResetSaveInitialDiv = $("#settingsResetSaveInitialDiv");
     var settingsResetSaveButton = $("#settingsResetSaveButton");
@@ -367,16 +481,257 @@ $(function() {
         location.reload();
     });
 
+    /* Shop code */
+    var doDevPrices = false;
+    var devPriceScale = {
+        0: 0,
+        1: 1,
+        2: 2,
+        3: 3,
+        4: 4,
+        5: 5,
+        6: 6,
+        7: 7,
+        8: 8,
+        9: 9
+    }
+
+    // First Click Doubler
+    var buyClickUpgradeButton = $("#buyClickUpgradeButton");
+    var firstClickDoublerFlavorText = $("#clickUpgradeIncreaseFlavorText");
+    var firstClickDoublersCountText = $("#firstClickDoublersCount");
+    var firstClickDoublerPrices = {
+        0: 450,
+        1: 1800,
+        2: 5400,
+        3: 14400,
+        4: 36000,
+        5: 86400,
+        6: 201600,
+        7: 460800,
+        8: 1036800,
+        9: 2304000
+    }
+
+    var currentFirstClickDoublerPrice;
+
+    updateFirstClickDoublerPrice();
+    updateFirstClickDoublerTexts();
+
+    var firstClickDoublerAnimLock = false;
+    var firstClickDoublerFlavorAnimation;
+
+    buyClickUpgradeButton.on("click", function() {
+        // Check if user can afford
+        if(save.currencies.mainCurrency >= currentFirstClickDoublerPrice) {
+            // Subtract cost from units
+            save.currencies.mainCurrency -= currentFirstClickDoublerPrice;
+            
+            // Update doubler count
+            save.generation.firstClickDoublers += 1;
+            
+            // Update current price
+            updateFirstClickDoublerPrice();
+
+            // Update texts
+            updateFirstClickDoublerTexts();
+
+            // Double user click power
+            save.generation.clickPower *= 2;
+
+            // Update currency text
+            updateCurrencyText();
+
+            // Show flavor text
+            if(firstClickDoublerAnimLock) {
+                clearInterval(firstClickDoublerFlavorAnimation);
+                firstClickDoublerFlavorText.hide();    
+            }
+
+            firstClickDoublerFlavorText.text(`Clicking power is now ${save.generation.clickPower}u/c!`);
+            firstClickDoublerFlavorText.slideDown();
+
+            firstClickDoublerAnimLock = true;
+
+            firstClickDoublerFlavorAnimation = setInterval(() => {
+                firstClickDoublerFlavorText.slideUp();
+                firstClickDoublerAnimLock = false;
+                clearInterval(firstClickDoublerFlavorAnimation);
+            }, 3000);
+        }
+    });
+
+    function updateFirstClickDoublerTexts() {
+        if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
+            buyClickUpgradeButton.prop("disabled", !(save.currencies.mainCurrency >= currentFirstClickDoublerPrice));
+            buyClickUpgradeButton.text(`Buy (${currentFirstClickDoublerPrice}u)`);
+        } else {
+            buyClickUpgradeButton.prop("disabled", true);
+            buyClickUpgradeButton.text(`Maxed!`);
+        }
+
+        firstClickDoublersCountText.text(`${save.generation.firstClickDoublers}/${MAX_FIRST_CLICK_DOUBLER}`);
+    }
+
+    function updateFirstClickDoublerPrice() {
+        if(doDevPrices) {
+            currentFirstClickDoublerPrice = devPriceScale[save.generation.firstClickDoublers];
+        } else {
+            currentFirstClickDoublerPrice = firstClickDoublerPrices[save.generation.firstClickDoublers];
+        }
+    }
+
+    // Tier 1 Main Generator
+    var buytier1MainGenButton = $("#buyTier1MainGenButton");
+    var tier1MainGenCountText = $("#tier1MainGenCountText");
+    var tier1MainGenDescriptionText = $("#tier1MainGenDescriptionText");
+    var tier1MainGenIncreaseFlavorText = $("#tier1MainGenIncreaseFlavorText");
+
+    var tier1MainGenPrices = {
+        0: 57600,
+        1: 175200,
+        2: 352800,
+        3: 710400,
+        4: 1488000,
+        5: 3225600,
+        6: 7123200,
+        7: 15820800,
+        8: 35078400,
+        9: 77376000 
+    }
+
+    var currentTier1MainGenPrice;
+
+    updatetier1MainGenPrice();
+    updatetier1MainGenTexts();
+
+    var tier1MainGenAnimLock = false;
+    var tier1MainGenFlavorAnimation;
+
+    buytier1MainGenButton.on("click", function() {
+        // Check if user can afford
+        if(save.currencies.mainCurrency >= currentTier1MainGenPrice) {
+            // Subtract cost from units
+            save.currencies.mainCurrency -= currentTier1MainGenPrice;
+            
+            // Update gen count
+            save.generation.firstMainGenerators += 1;
+            
+            // Update current price
+            updatetier1MainGenPrice();
+
+            // Update texts
+            updatetier1MainGenTexts();
+
+            // Update gain per second
+            save.generation.firstMainGeneratorPower = save.generation.firstMainGeneratorPower == 0 ? 1000 : save.generation.firstMainGeneratorPower * 2;
+            updateMainPerSecond();
+
+            // Update currency text
+            updateCurrencyText();
+
+            // Show flavor text
+            if(tier1MainGenAnimLock) {
+                clearInterval(tier1MainGenFlavorAnimation);
+                tier1MainGenIncreaseFlavorText.hide();    
+            }
+
+            tier1MainGenIncreaseFlavorText.text(`Tier 1 Generator power is now ${save.generation.firstMainGeneratorPower}u/s!`);
+            tier1MainGenIncreaseFlavorText.slideDown();
+
+            tier1MainGenAnimLock = true;
+            
+            tier1MainGenFlavorAnimation = setInterval(() => {
+                tier1MainGenIncreaseFlavorText.slideUp();
+                tier1MainGenAnimLock = false;
+                clearInterval(tier1MainGenFlavorAnimation);
+            }, 3000);
+        }
+    });
+
+    function updatetier1MainGenTexts() {
+        if(save.generation.firstMainGenerators < MAX_TIER_1_GENS) {
+            buytier1MainGenButton.prop("disabled", !(save.currencies.mainCurrency >= currentTier1MainGenPrice));
+            buytier1MainGenButton.text(`Buy (${currentTier1MainGenPrice}u)`);
+            tier1MainGenDescriptionText.text(`Increases idle production to ${save.generation.firstMainGeneratorPower == 0 ? 1000 : save.generation.firstMainGeneratorPower * 2}u/s`);
+        } else {
+            buytier1MainGenButton.prop("disabled", true);
+            buytier1MainGenButton.text(`Maxed!`);
+            tier1MainGenDescriptionText.text(`Tier 1 idle production is maxed at ${save.generation.firstMainGeneratorPower}u/s.`);
+        }
+
+        tier1MainGenCountText.text(`${save.generation.firstMainGenerators}/${MAX_TIER_1_GENS}`);
+    }
+
+    function updatetier1MainGenPrice() {
+        if(doDevPrices) {
+            currentTier1MainGenPrice = devPriceScale[save.generation.firstMainGenerators];
+        } else {
+            currentTier1MainGenPrice = tier1MainGenPrices[save.generation.firstMainGenerators];
+        }
+    }
+
+    /* DO TICKS N SHIT */
+    tickInterval = setInterval(() => {
+        doTick();
+    }, save.settings.tickRate);
+
+    function doTick() {
+        // Calculate idle gain
+        if(save.generation.mainPerSecond > 0) {
+            var gain = calculateIdleGain();
+            save.currencies.mainCurrency += gain;
+
+            // Update currency text
+            updateCurrencyText();
+        }
+
+        // Update shop buttons if page is open
+        if(currentPage == SHOP) {
+            // If unbought first click doublers
+            if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
+                updateFirstClickDoublerTexts();
+            }
+            
+            // If unbought Tier 1 Main Generators
+            if(save.generation.firstMainGenerators < MAX_TIER_1_GENS) {
+                updatetier1MainGenTexts();
+            }
+        }
+    }
+
+    function resetTickInterval() {
+        clearInterval(tickInterval);
+
+        tickInterval = setInterval(() => {
+            doTick();
+        }, save.settings.tickRate);
+    }
+
+    function updateMainPerSecond() {
+        save.generation.mainPerSecond = save.generation.firstMainGeneratorPower; // add future generator powers to this
+    }
+
+    function calculateIdleGain() {
+        var gainPerMillisecond = save.generation.mainPerSecond / 1000;
+        var gainPerTick = gainPerMillisecond * save.settings.tickRate;
+        return gainPerTick;
+    }
+
     /* Main Currency Button Code */
     var lblMainCurrencyText = $("#navMainCurrency");
     var btnClickMe = $("#btnClickMe");
 
-    lblMainCurrencyText.text(save.currencies.mainCurrency + MAIN_CURRENCY_ABBR);
+    updateCurrencyText();
 
-    btnClickMe.on("click", addMainCurrency);
+    btnClickMe.on("click", mainCurrencyButtonClicked);
 
-    function addMainCurrency() {
-        save.currencies.mainCurrency += 1;
-        lblMainCurrencyText.text(save.currencies.mainCurrency + MAIN_CURRENCY_ABBR);
+    function mainCurrencyButtonClicked() {
+        save.currencies.mainCurrency += save.generation.clickPower * save.generation.mainProdMult;
+        updateCurrencyText();
+    }
+
+    function updateCurrencyText() {
+        lblMainCurrencyText.text(`${Math.floor(save.currencies.mainCurrency)}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${save.generation.mainPerSecond}u/s)` : "")}+(${save.generation.clickPower}u/c)`);
     }
 })
