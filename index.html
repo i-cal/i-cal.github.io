@@ -47,33 +47,50 @@
         <!-- Settings  -->
         <div id="settingsDiv" style="display:none;">
             <h1>Settings</h1>
-            <div>
-                <label for="settingAutosaveEnabled">Autosave</label>
-                <br>
-                <input type="checkbox" id="settingAutosaveEnabled">
+            <div class="settingsBox">
+                <label for="settingsSaveButton">Manual Save</label>
+                <small class="autosaveDisabledFlavorText" style="color:red;">This is now the only way you can save the game.</small>
+                <div>
+                    <button id="settingsSaveButton">Save</button>
+                    <small id="settingsManualSaveFinished" style="display:none; color:green;">Saved!</small>
+                </div>
             </div>
-            <div>
+            <div class="settingsBox">
+                <label for="settingAutosaveEnabled">Autosave</label>
+                <small class="autosaveDisabledFlavorText" style="display:none;">Why would you do this to yourself???</small>
+                <div>
+                    <input type="checkbox" id="settingAutosaveEnabled">
+                </div>
+            </div>
+            <div id="settingAutosaveIntervalDiv" class="settingsBox">
                 <label for="settingAutosaveInterval">Autosave Interval</label>
                 <small>(could cause performance issues)</small>
-                <br>
-                <input type="range" min="1" max="30" value="15" step="1" id="settingAutosaveInterval">
-                <label for="settingAutosaveInterval" id="settingAutosaveIntervalCurrentValue"></label>
+                <div>
+                    <input type="range" min="1" max="30" value="15" step="1" id="settingAutosaveInterval">
+                    <label for="settingAutosaveInterval" id="settingAutosaveIntervalCurrentValue"></label>
+                </div>
+            </div>
+            <div class="settingsBox">
+                <div id="settingsResetSaveInitialDiv">
+                    <label for="settingsResetSaveButton" style="color:red;">This will completely restart your entire save from 0. No coming back.</label>
+                    <div>
+                        <button id="settingsResetSaveButton" style="background-color:lightcoral;">Reset Save</button>
+                    </div>
+                </div>
+                <div id="settingsResetSaveConfirmDiv" style="display:none;">
+                    <label for="settingsResetConfirm" style="color:red; font-weight: bolder;">Are you sure?</label>
+                    <div>
+                        <button id="settingsResetNevermind" style="background-color:lightgreen;">Nevermind</button>
+                        <button id="settingsResetConfirm" style="background-color:red;">Reset Save</button>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- Dev To-Do Div -->
         <div id="devToDoDiv" style="display:none;">
             <h1>Dev To-Do List</h1>
             <ol>
-                <li>Save System</li>
-                <ul>
-                    <li style="text-decoration:line-through;">Add autosave system</li>
-                    <ul style="text-decoration:line-through;">
-                        <li>Enable/Disable option</li>
-                        <li>Interval setting</li>
-                    </ul>
-                    <li>Manual save button</li>
-                </ul>
-                <li>Remember last opened page</li>
+                
                 <li>Rework currency gain to include a base, and multipliers applied afterwards - based on upgrades.</li>
                 <ul>
                     <li>??Need to decide on either having resource generation per second or per tick</li>
@@ -86,6 +103,20 @@
                     <li>Click multipliers</li>
                 </ul>
             </ol>
+            <h1>Dev Done List</h1>
+            <ul style="text-decoration:line-through;">
+                <li>Remember last opened page</li>
+                <li >Save System</li>
+                <ul>
+                    <li>Add autosave system</li>
+                    <ul>
+                        <li>Enable/Disable option</li>
+                        <li>Interval setting</li>
+                    </ul>
+                    <li>Manual save button</li>
+                    <li>Save reset button</li>
+                </ul>
+            </ul>
         </div>
     </body>
 </html>
