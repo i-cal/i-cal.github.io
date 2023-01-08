@@ -1,0 +1,20 @@
+nav {
+    background-color: #AFAFAF;
+    padding: 10px;
+}
+
+#navPageTitle {
+    font-weight: bold;
+    color: black;
+    text-decoration: none;
+    display: inline;
+}
+
+.navLink {
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+#mainDiv, #shopDiv, #devToDoDiv, #settingsDiv {
+    padding: 15px;
+}
