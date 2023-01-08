@@ -34,6 +34,7 @@
         </nav>
         <nav class="navbar navbar-dark bg-light">
             <span id="navMainCurrency">0</span>
+            <span id="offlineGainsText" style="display:none;"></span>
         </nav>
         <!-- Main (Home) Div -->
         <div id="mainDiv">
@@ -117,6 +118,14 @@
                     <small id="settingCustomTickRateFlavorText" style="display:none;"></small>
                 </div>
             </div>
+            <div id="settingOfflineProgressionDiv" class="settingsBox">
+                <label for="settingOfflineProgressionEnabled">Offline Progression</label>
+                <small id="settingOfflineProgressionDesc">Get 75% of your online earnings while offline</small>
+                <div>
+                    <input type="checkbox" id="settingOfflineProgressionEnabled">
+                    <small id="settingOfflineProgressionEnabledFlavorText" style="display:none;"></small>
+                </div>
+            </div>
             <div class="settingsBox">
                 <div id="settingsResetSaveInitialDiv">
                     <label for="settingsResetSaveButton" style="color:red;">This will completely restart your entire save from 0. No coming back.</label>
@@ -139,7 +148,6 @@
             <ol>
                 <li>Dark mode</li>
                 <li>Scientific notation</li>
-                <li>Offline progress</li>
                 <li>Make the shop have things to shop for</li>
                 <ul>
                     <li>Click multipliers</li>

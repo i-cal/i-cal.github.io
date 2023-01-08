@@ -6,7 +6,8 @@ $(function() {
     const MIN_AUTOSAVE_INTERVAL = 1000;
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
-    const SAVEFILE_VERSION = 5;
+    const OP_PLS_NERF = 0.75;
+    const SAVEFILE_VERSION = 6;
 
     const HOME = "home";
     const SHOP = "shop";
@@ -34,6 +35,8 @@ $(function() {
     var settingsDiv = $("#settingsDiv");
     var devToDoDiv = $("#devToDoDiv");
 
+    var navMainCurrencyText = $("#navMainCurrency");
+
     // Attempt to load save data
     saveCookie = getCookie("save");
 
@@ -58,7 +61,8 @@ $(function() {
                 autoSaveEnabled: true,
                 autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
                 tickRate: 50,
-                customTickRateAllowed: false
+                customTickRateAllowed: false,
+                OPEnabled: false
             },
             version: SAVEFILE_VERSION
         };
@@ -71,6 +75,31 @@ $(function() {
 
             // Save is up to date
             save.version = SAVEFILE_VERSION;
+        }
+
+        // Offline progression (75% of estimated online, based off of units per second)
+        if(save.settings.OPEnabled) {
+            var now = new Date();
+            var difference = (now.getTime() - new Date(save.lastSaved).getTime()) / 1000;
+            var offlineGains = Math.floor((difference * save.generation.mainPerSecond) * OP_PLS_NERF);
+    
+            var offlineGainsText = $("#offlineGainsText");
+    
+            if(difference > 1) {
+                navMainCurrencyText.hide();
+    
+                offlineGainsText.text(`You earned ${offlineGains}u while you were away`);
+                offlineGainsText.slideToggle();
+    
+                var anim = setInterval(() => {
+                    offlineGainsText.slideToggle();
+                    navMainCurrencyText.slideDown();
+                    offlineGainsText.text("");
+                    clearInterval(anim);
+                }, 3000);
+            }
+    
+            save.currencies.mainCurrency += offlineGains;
         }
 
         // Goto last open page
@@ -135,6 +164,11 @@ $(function() {
             // Version < 5
             if(save.settings.customTickRateAllowed == undefined) {
                 save.settings.customTickRateAllowed = false;
+            }
+
+            // Version < 6
+            if(save.settings.OPEnabled == undefined) {
+                save.settings.OPEnabled = false;
             }
         }
     }
@@ -459,6 +493,33 @@ $(function() {
         saveGameData();
     });
 
+    // Offline Progression
+    var settingOfflineProgressionEnabled = $("#settingOfflineProgressionEnabled");
+    var settingOfflineProgressionEnabledFlavorText = $("#settingOfflineProgressionEnabledFlavorText");
+    var settingOfflineProgressionDesc = $("#settingOfflineProgressionDesc");
+    
+    settingOfflineProgressionDesc.text(`Get ${OP_PLS_NERF * 100}% of your online earnings while offline`);
+
+    settingOfflineProgressionEnabled.prop("checked", save.settings.OPEnabled);
+    
+    settingOfflineProgressionEnabled.on("click", function() {
+        var op = $(this).prop("checked");
+
+        if(op) {
+            settingOfflineProgressionEnabledFlavorText.text("hehe ;)");
+            settingOfflineProgressionEnabledFlavorText.slideToggle();
+    
+            var offlineAnim = setInterval(() => {
+                settingOfflineProgressionEnabledFlavorText.slideToggle();
+                clearInterval(offlineAnim);
+            }, 3000);
+        }
+
+        save.settings.OPEnabled = op;
+
+        saveGameData();
+    });
+
     // Reset save code
     var settingsResetSaveInitialDiv = $("#settingsResetSaveInitialDiv");
     var settingsResetSaveButton = $("#settingsResetSaveButton");
@@ -494,6 +555,13 @@ $(function() {
         7: 7,
         8: 8,
         9: 9
+    }
+
+    if(doDevPrices) {
+        shopLink.css({
+            color: "red",
+            fontWeight: "bolder"
+        });
     }
 
     // First Click Doubler
@@ -719,7 +787,6 @@ $(function() {
     }
 
     /* Main Currency Button Code */
-    var lblMainCurrencyText = $("#navMainCurrency");
     var btnClickMe = $("#btnClickMe");
 
     updateCurrencyText();
@@ -732,6 +799,6 @@ $(function() {
     }
 
     function updateCurrencyText() {
-        lblMainCurrencyText.text(`${Math.floor(save.currencies.mainCurrency)}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${save.generation.mainPerSecond}u/s)` : "")}+(${save.generation.clickPower}u/c)`);
+        navMainCurrencyText.text(`${Math.floor(save.currencies.mainCurrency)}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${save.generation.mainPerSecond}u/s)` : "")}+(${save.generation.clickPower}u/c)`);
     }
 })
