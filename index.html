@@ -35,24 +35,32 @@
         <nav class="navbar navbar-dark bg-light">
             <span id="navMainCurrency">0</span>
         </nav>
-        
-
+        <!-- Main (Home) Div -->
         <div id="mainDiv">
             <p>This button will generate 1 unit of the main currency every time it is clicked.<br>Try clicking once, and then holding the enter button down to reach max efficiency.</p>
             <button id="btnClickMe">Click me!</button>
-            
         </div>
-
+        <!-- Shop Div -->
         <div id="shopDiv" style="display:none;">
             <h1>Welcome to the shop!</h1>
         </div>
-
+        <!-- Settings  -->
         <div id="settingsDiv" style="display:none;">
             <h1>Settings</h1>
-            <input type="checkbox" id="settingAutosaveEnabled">
-            <label for="settingAutosaveEnabled">Autosave</label>
+            <div>
+                <label for="settingAutosaveEnabled">Autosave</label>
+                <br>
+                <input type="checkbox" id="settingAutosaveEnabled">
+            </div>
+            <div>
+                <label for="settingAutosaveInterval">Autosave Interval</label>
+                <small>(could cause performance issues)</small>
+                <br>
+                <input type="range" min="1" max="30" value="15" step="1" id="settingAutosaveInterval">
+                <label for="settingAutosaveInterval" id="settingAutosaveIntervalCurrentValue"></label>
+            </div>
         </div>
-
+        <!-- Dev To-Do Div -->
         <div id="devToDoDiv" style="display:none;">
             <h1>Dev To-Do List</h1>
             <ul>
