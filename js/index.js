@@ -6,7 +6,7 @@ $(function() {
     const MIN_AUTOSAVE_INTERVAL = 1000;
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
-    const SAVEFILE_VERSION = 2;
+    const SAVEFILE_VERSION = 3;
 
     const HOME = "home";
     const SHOP = "shop";
@@ -14,6 +14,8 @@ $(function() {
     const DEVTODO = "devtodo";
 
     const MAX_FIRST_CLICK_DOUBLER = 10;
+
+    var tickInterval;
 
     var autosaveTimer;
 
@@ -52,7 +54,8 @@ $(function() {
             lastSaved: new Date(),
             settings: {
                 autoSaveEnabled: true,
-                autoSaveInterval: DEF_AUTOSAVE_INTERVAL
+                autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
+                tickRate: 50
             },
             version: SAVEFILE_VERSION
         };
@@ -114,6 +117,11 @@ $(function() {
                     secondMainGenerators: 0,
                     thirdMainGenerators: 0
                 };
+            }
+
+            // Version < 3
+            if(save.settings.tickRate == undefined) {
+                save.settings.tickRate = 50;
             }
         }
     }
@@ -398,103 +406,143 @@ $(function() {
     });
 
     /* Shop code */
+    var doDevPrices = true;
+    var devPriceScale = {
+        0: 0,
+        1: 1,
+        2: 2,
+        3: 3,
+        4: 4,
+        5: 5,
+        6: 6,
+        7: 7,
+        8: 8,
+        9: 9
+    }
+
     // First Click Doubler
-    $(function() {
-        var buyClickUpgradeButton = $("#buyClickUpgradeButton");
-        var firstClickDoublerFlavorText = $("#clickUpgradeIncreaseFlavorText");
-        var firstClickDoublersCount = $("#firstClickDoublersCount");
-        var firstClickDoublerPrices = {
-            0: 450,
-            1: 1800,
-            2: 5400,
-            3: 14400,
-            4: 36000,
-            5: 86400,
-            6: 201600,
-            7: 460800,
-            8: 1036800,
-            9: 2304000
-        }
+    var buyClickUpgradeButton = $("#buyClickUpgradeButton");
+    var firstClickDoublerFlavorText = $("#clickUpgradeIncreaseFlavorText");
+    var firstClickDoublersCountText = $("#firstClickDoublersCount");
+    var firstClickDoublerPrices = {
+        0: 450,
+        1: 1800,
+        2: 5400,
+        3: 14400,
+        4: 36000,
+        5: 86400,
+        6: 201600,
+        7: 460800,
+        8: 1036800,
+        9: 2304000
+    }
 
-        var doDevPrices = true;
-        var devFirstClickDoublerPrices = {
-            0: 0,
-            1: 1,
-            2: 2,
-            3: 3,
-            4: 4,
-            5: 5,
-            6: 6,
-            7: 7,
-            8: 8,
-            9: 9
-        }
+    var currentFirstClickDoublerPrice;
 
-        var currentPrice;
+    updateFirstClickDoublerPrice();
+    updateFirstClickDoublerTexts();
 
-        updateFirstClickDoublerPrice();
-        updateFirstClickDoublerTexts();
+    var animLock = false;
+    var flavorAnimation;
 
-        var animLock = false;
-        var flavorAnimation;
+    buyClickUpgradeButton.on("click", function() {
+        // Check if user can afford
+        if(save.currencies.mainCurrency >= currentFirstClickDoublerPrice) {
+            // Subtract cost from units
+            save.currencies.mainCurrency -= currentFirstClickDoublerPrice;
+            
+            // Update doubler count
+            save.generation.firstClickDoublers += 1;
+            
+            // Update current price
+            updateFirstClickDoublerPrice();
 
-        buyClickUpgradeButton.on("click", function() {
-            // Check if user can afford
-            if(save.currencies.mainCurrency >= currentPrice) {
-                // Subtract cost from units
-                save.currencies.mainCurrency -= currentPrice;
-                
-                // Update doubler count
-                save.generation.firstClickDoublers += 1;
-                
-                // Update current price
-                updateFirstClickDoublerPrice();
+            // Update texts
+            updateFirstClickDoublerTexts();
 
-                // Update texts
-                updateFirstClickDoublerTexts();
+            // Double user click power
+            save.generation.clickPower *= 2;
 
-                // Double user click power
-                save.generation.clickPower *= 2;
+            // Update currency text
+            updateCurrencyText();
 
-                // Update currency text
-                updateCurrencyText();
+            // Show flavor text
+            if(animLock) {
+                clearInterval(flavorAnimation);
+                firstClickDoublerFlavorText.hide();    
+            }
 
-                // Show flavor text
-                if(animLock) {
-                    clearInterval(flavorAnimation);
-                    firstClickDoublerFlavorText.hide();    
-                }
-
-                firstClickDoublerFlavorText.text(`Clicking power is now ${save.generation.clickPower}/c!`);
+            firstClickDoublerFlavorText.text(`Clicking power is now ${save.generation.clickPower}/c!`);
+            firstClickDoublerFlavorText.slideToggle();
+            animLock = true;
+            flavorAnimation = setInterval(() => {
                 firstClickDoublerFlavorText.slideToggle();
-                animLock = true;
-                flavorAnimation = setInterval(() => {
-                    firstClickDoublerFlavorText.slideToggle();
-                    animLock = false;
-                    clearInterval(flavorAnimation);
-                }, 3000);
-            }
-        });
+                animLock = false;
+                clearInterval(flavorAnimation);
+            }, 3000);
+        }
+    });
 
-        function updateFirstClickDoublerTexts() {
+    function updateFirstClickDoublerTexts() {
+        if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
+            buyClickUpgradeButton.prop("disabled", !(save.currencies.mainCurrency >= currentFirstClickDoublerPrice));
+            buyClickUpgradeButton.text(`Buy (${currentFirstClickDoublerPrice}u)`);
+        } else {
+            buyClickUpgradeButton.prop("disabled", true);
+            buyClickUpgradeButton.text(`Maxed!`);
+        }
+
+        firstClickDoublersCountText.text(`${save.generation.firstClickDoublers}/${MAX_FIRST_CLICK_DOUBLER}`);
+    }
+
+    function updateFirstClickDoublerPrice() {
+        if(doDevPrices) {
+            currentFirstClickDoublerPrice = devPriceScale[save.generation.firstClickDoublers];
+        } else {
+            currentFirstClickDoublerPrice = firstClickDoublerPrices[save.generation.firstClickDoublers];
+        }
+    }
+
+    // Tier 1 Main Generator
+    //TODO
+
+    /* DO TICKS N SHIT */
+    tickInterval = setInterval(() => {
+        doTick();
+    }, save.settings.tickRate);
+
+    function doTick() {
+        // Calculate idle gain
+        if(save.generation.mainPerSecond > 0) {
+            var gain = calculateIdleGain();
+            save.currencies.mainCurrency += gain;
+
+            // Update currency text
+            updateCurrencyText();
+        }
+
+        // Update shop buttons if page is open
+        if(currentPage == SHOP) {
+            // If unbought first click doublers
             if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
-                buyClickUpgradeButton.text(`Buy (${currentPrice}u)`);
-            } else {
-                buyClickUpgradeButton.prop("disabled", true);
-                buyClickUpgradeButton.text(`Maxed!`);
-            }
-
-            firstClickDoublersCount.text(`${save.generation.firstClickDoublers}/${MAX_FIRST_CLICK_DOUBLER}`);
-        }
-
-        function updateFirstClickDoublerPrice() {
-            if(doDevPrices) {
-                currentPrice = devFirstClickDoublerPrices[save.generation.firstClickDoublers];
-            } else {
-                currentPrice = firstClickDoublerPrices[save.generation.firstClickDoublers];
+                updateFirstClickDoublerTexts();
             }
         }
-    })
+    }
+
+    function resetTickInterval() {
+        clearInterval(tickInterval);
+
+        tickInterval = setInterval(() => {
+            doTick();
+        }, save.settings.tickRate);
+    }
+
+    function calculateIdleGain() {
+        var gainPerMillisecond = save.generation.mainPerSecond / 1000;
+        var gainPerTick = gainPerMillisecond * save.settings.tickRate;
+        return gainPerTick;
+    }
 
     /* Main Currency Button Code */
     var lblMainCurrencyText = $("#navMainCurrency");
@@ -510,6 +558,6 @@ $(function() {
     }
 
     function updateCurrencyText() {
-        lblMainCurrencyText.text(`${save.currencies.mainCurrency}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${save.generation.mainPerSecond}/s)` : "")}+(${save.generation.clickPower}/c)`);
+        lblMainCurrencyText.text(`${Math.floor(save.currencies.mainCurrency)}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${save.generation.mainPerSecond}/s)` : "")}+(${save.generation.clickPower}/c)`);
     }
 })

@@ -61,11 +61,22 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-4">
-
-                    </div>
+                    <div class="col-4"></div>
                     <div class="col-4 px-15 shopBox">
                         <h3>Idle Generation</h3>
+                        <div class="shopItem tier1MainGenDiv">
+                            <div style="display:block;">
+                                <label for="buytier1MainGenButton">Tier 1 Main Generator</label>
+                                <small id="tier1MainGenCount">0/10</small>
+                            </div>
+                            <div>
+                                <small id="tier1MainGenDescriptionText">Increases idle production by 1000u/s</small>
+                            </div>
+                            <div>
+                                <button id="buyTier1MainGenButton">Buy</button>
+                                <small id="tier1MainGenIncreaseFlavorText" style="display:none;"></small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -121,6 +132,7 @@
                     <li>Click multipliers</li>
                     <ul>
                         <li class="finishedDevToDo">Double your clicks, up to x1024 (10 upgrades)</li>
+                        <li>Add a portion of idle generation back into clicks (5 upgrades, up to 50% maybe)</li>
                     </ul>
                     <li>Currency generators</li>
                     <ul>
@@ -138,7 +150,7 @@
                 <ul>
                     <li>Show gain per second next to currency as "+([gain]/s)"</li>
                     <li class="finishedDevToDo">Show gain per click as "+([click]/c)"</li>
-                    <li>Every tick: gain = ceil((currency per second) / (tick rate in ms))</li>
+                    <li>Every tick: gain = (currency per second / 1000) * (tick rate in ms)</li>
                     <li>Tick interval option in settings (text box) - min 16ms, max 1000ms, default 50ms</li>
                 </ul>
                 <li>Once tick update rate system is in place:</li>
