@@ -63,18 +63,29 @@
         <!-- Dev To-Do Div -->
         <div id="devToDoDiv" style="display:none;">
             <h1>Dev To-Do List</h1>
-            <ul>
-                <li style="text-decoration:line-through;">Save progress so you don't have to "beat" the whole game in one sitting</li>
-                <li>
-                    Make the shop have things to shop for
-                    <ul>
-                        <li>Currency generators</li>
-                        <li>Click multipliers</li>
+            <ol>
+                <li>Save System</li>
+                <ul>
+                    <li style="text-decoration:line-through;">Add autosave system</li>
+                    <ul style="text-decoration:line-through;">
+                        <li>Enable/Disable option</li>
+                        <li>Interval setting</li>
                     </ul>
-                </li>
+                    <li>Manual save button</li>
+                </ul>
+                <li>Remember last opened page</li>
                 <li>Rework currency gain to include a base, and multipliers applied afterwards - based on upgrades.</li>
-                <li>Add a save button to the nav menu in case someone has autosave off</li>
-            </ul>
+                <ul>
+                    <li>??Need to decide on either having resource generation per second or per tick</li>
+                    <li>??Every tick: gain = ceil((currency per second) / (tick rate in ms))</li>
+                    <li>??Tick interval option in settings (text box) - min 16ms, max 1000ms, default 50ms</li>
+                </ul>
+                <li>Make the shop have things to shop for</li>
+                <ul>
+                    <li>Currency generators</li>
+                    <li>Click multipliers</li>
+                </ul>
+            </ol>
         </div>
     </body>
 </html>
