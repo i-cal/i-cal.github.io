@@ -617,15 +617,15 @@ $(function() {
             // Update gen count
             save.generation.firstMainGenerators += 1;
             
+            // Update gain per second
+            save.generation.firstMainGeneratorPower = save.generation.firstMainGeneratorPower == 0 ? 1000 : save.generation.firstMainGeneratorPower * 2;
+            updateMainPerSecond();
+
             // Update current price
             updatetier1MainGenPrice();
 
             // Update texts
             updatetier1MainGenTexts();
-
-            // Update gain per second
-            save.generation.firstMainGeneratorPower = save.generation.firstMainGeneratorPower == 0 ? 1000 : save.generation.firstMainGeneratorPower * 2;
-            updateMainPerSecond();
 
             // Update currency text
             updateCurrencyText();
