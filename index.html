@@ -48,7 +48,7 @@
             </div>
             <div class="container" style="padding-top:30px;">
                 <div class="row">
-                    <div class="col-4 px-15 shopBox">
+                    <div class="col-5 px-15 shopBox">
                         <h3>Click Upgrades</h3>
                         <div class="shopItem clickUpgradeDiv">
                             <div style="display:block;">
@@ -61,13 +61,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-4"></div>
-                    <div class="col-4 px-15 shopBox">
+                    <div class="col-2"></div>
+                    <div class="col-5 px-15 shopBox">
                         <h3>Idle Generation</h3>
                         <div class="shopItem tier1MainGenDiv">
                             <div style="display:block;">
-                                <label for="buytier1MainGenButton">Tier 1 Main Generator</label>
-                                <small id="tier1MainGenCount">0/10</small>
+                                <label for="buyTier1MainGenButton">Tier 1 Main Generator</label>
+                                <small id="tier1MainGenCountText">0/10</small>
                             </div>
                             <div>
                                 <small id="tier1MainGenDescriptionText">Increases idle production by 1000u/s</small>
@@ -105,6 +105,16 @@
                 <div>
                     <input type="range" min="1" max="30" value="15" step="1" id="settingAutosaveInterval">
                     <label for="settingAutosaveInterval" id="settingAutosaveIntervalCurrentValue"></label>
+                </div>
+            </div>
+            <div id="settingTickRateDiv" class="settingsBox">
+                <label for="settingCustomTickRateAllowed">Custom Tick Rate (ms)</label>
+                <small>(could help/hinder performance)</small>
+                <div>
+                    <input type="checkbox" id="settingCustomTickRateAllowed">
+                    <input type="number" min="16" max="1000" value="50" step="1" id="settingCustomTickRate" style="display:none;">
+                    <button id="saveNewCustomTickrateButton" style="display:none;">Save</button>
+                    <small id="settingCustomTickRateFlavorText" style="display:none;"></small>
                 </div>
             </div>
             <div class="settingsBox">
@@ -146,10 +156,14 @@
                     </ul>
                     <li>Hide upgrades when they are maxed</li>
                 </ul>
+                <li>Offline progress</li>
+            </ol>
+            <h1>Dev Done List</h1>
+            <ul class="finishedDevToDo">
                 <li>Rework currency gain to include a base, and multipliers applied afterwards - based on upgrades.</li>
                 <ul>
                     <li>Show gain per second next to currency as "+([gain]/s)"</li>
-                    <li class="finishedDevToDo">Show gain per click as "+([click]/c)"</li>
+                    <li>Show gain per click as "+([click]/c)"</li>
                     <li>Every tick: gain = (currency per second / 1000) * (tick rate in ms)</li>
                     <li>Tick interval option in settings (text box) - min 16ms, max 1000ms, default 50ms</li>
                 </ul>
@@ -157,10 +171,6 @@
                 <ul>
                     <li>Disable/enable shop buy buttons when user can afford</li>
                 </ul>
-                <li>Offline progress</li>
-            </ol>
-            <h1>Dev Done List</h1>
-            <ul class="finishedDevToDo">
                 <li>Remember last opened page</li>
                 <li >Save System</li>
                 <ul>
