@@ -6,12 +6,14 @@ $(function() {
     const MIN_AUTOSAVE_INTERVAL = 1000;
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
-    const SAVEFILE_VERSION = 1;
+    const SAVEFILE_VERSION = 2;
 
     const HOME = "home";
     const SHOP = "shop";
     const SETTINGS = "settings";
     const DEVTODO = "devtodo";
+
+    const MAX_FIRST_CLICK_DOUBLER = 10;
 
     var autosaveTimer;
 
@@ -37,6 +39,15 @@ $(function() {
             currencies: {
                 mainCurrency: 0,
             },
+            generation: {
+                clickPower: 1,
+                firstClickDoublers: 0,
+                mainPerSecond: 0,
+                mainProdMult: 1,
+                firstMainGenerators: 0,
+                secondMainGenerators: 0,
+                thirdMainGenerators: 0
+            },
             lastOpenPage: HOME,
             lastSaved: new Date(),
             settings: {
@@ -50,6 +61,18 @@ $(function() {
         
         // Update old save files
         if(save.version == undefined || save.version < SAVEFILE_VERSION) {
+            fixSaveFiles(save);
+
+            // Save is up to date
+            save.version = SAVEFILE_VERSION;
+        }
+
+        // Goto last open page
+        switchToPage(save.lastOpenPage, 0);
+    }
+
+    function fixSaveFiles(saveData) {
+        if(saveData.version === undefined || saveData.version < SAVEFILE_VERSION) {
             // Fix if save was from before currencies were separate JSON object
             if(save.currencies == undefined) {
                 save.currencies = {
@@ -70,22 +93,29 @@ $(function() {
                 delete save.autoSaveInterval;
             }
 
-            // Set last open page to home if no other
+            // Set last open page to home
             if(save.lastOpenPage == undefined) {
                 save.lastOpenPage = HOME;
             }
 
-            // Set save date if no other
+            // Set save date
             if(save.lastSaved == undefined) {
                 save.lastSaved = new Date();
             }
 
-            // Save is up to date
-            save.version = SAVEFILE_VERSION;
+            // If before shop & generation update, generation attributes need to be added
+            if(save.generation == undefined) {
+                save.generation = {
+                    clickPower: 1,
+                    firstClickDoublers: 0,
+                    mainPerSecond: 0,
+                    mainProdMult: 1,
+                    firstMainGenerators: 0,
+                    secondMainGenerators: 0,
+                    thirdMainGenerators: 0
+                };
+            }
         }
-
-        // Goto last open page
-        switchToPage(save.lastOpenPage, 0);
     }
 
     // Restore settings from save data
@@ -367,16 +397,119 @@ $(function() {
         location.reload();
     });
 
+    /* Shop code */
+    // First Click Doubler
+    $(function() {
+        var buyClickUpgradeButton = $("#buyClickUpgradeButton");
+        var firstClickDoublerFlavorText = $("#clickUpgradeIncreaseFlavorText");
+        var firstClickDoublersCount = $("#firstClickDoublersCount");
+        var firstClickDoublerPrices = {
+            0: 450,
+            1: 1800,
+            2: 5400,
+            3: 14400,
+            4: 36000,
+            5: 86400,
+            6: 201600,
+            7: 460800,
+            8: 1036800,
+            9: 2304000
+        }
+
+        var doDevPrices = true;
+        var devFirstClickDoublerPrices = {
+            0: 0,
+            1: 1,
+            2: 2,
+            3: 3,
+            4: 4,
+            5: 5,
+            6: 6,
+            7: 7,
+            8: 8,
+            9: 9
+        }
+
+        var currentPrice;
+
+        updateFirstClickDoublerPrice();
+        updateFirstClickDoublerTexts();
+
+        var animLock = false;
+        var flavorAnimation;
+
+        buyClickUpgradeButton.on("click", function() {
+            // Check if user can afford
+            if(save.currencies.mainCurrency >= currentPrice) {
+                // Subtract cost from units
+                save.currencies.mainCurrency -= currentPrice;
+                
+                // Update doubler count
+                save.generation.firstClickDoublers += 1;
+                
+                // Update current price
+                updateFirstClickDoublerPrice();
+
+                // Update texts
+                updateFirstClickDoublerTexts();
+
+                // Double user click power
+                save.generation.clickPower *= 2;
+
+                // Update currency text
+                updateCurrencyText();
+
+                // Show flavor text
+                if(animLock) {
+                    clearInterval(flavorAnimation);
+                    firstClickDoublerFlavorText.hide();    
+                }
+
+                firstClickDoublerFlavorText.text(`Clicking power is now ${save.generation.clickPower}/c!`);
+                firstClickDoublerFlavorText.slideToggle();
+                animLock = true;
+                flavorAnimation = setInterval(() => {
+                    firstClickDoublerFlavorText.slideToggle();
+                    animLock = false;
+                    clearInterval(flavorAnimation);
+                }, 3000);
+            }
+        });
+
+        function updateFirstClickDoublerTexts() {
+            if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
+                buyClickUpgradeButton.text(`Buy (${currentPrice}u)`);
+            } else {
+                buyClickUpgradeButton.prop("disabled", true);
+                buyClickUpgradeButton.text(`Maxed!`);
+            }
+
+            firstClickDoublersCount.text(`${save.generation.firstClickDoublers}/${MAX_FIRST_CLICK_DOUBLER}`);
+        }
+
+        function updateFirstClickDoublerPrice() {
+            if(doDevPrices) {
+                currentPrice = devFirstClickDoublerPrices[save.generation.firstClickDoublers];
+            } else {
+                currentPrice = firstClickDoublerPrices[save.generation.firstClickDoublers];
+            }
+        }
+    })
+
     /* Main Currency Button Code */
     var lblMainCurrencyText = $("#navMainCurrency");
     var btnClickMe = $("#btnClickMe");
 
-    lblMainCurrencyText.text(save.currencies.mainCurrency + MAIN_CURRENCY_ABBR);
+    updateCurrencyText();
 
-    btnClickMe.on("click", addMainCurrency);
+    btnClickMe.on("click", mainCurrencyButtonClicked);
 
-    function addMainCurrency() {
-        save.currencies.mainCurrency += 1;
-        lblMainCurrencyText.text(save.currencies.mainCurrency + MAIN_CURRENCY_ABBR);
+    function mainCurrencyButtonClicked() {
+        save.currencies.mainCurrency += save.generation.clickPower * save.generation.mainProdMult;
+        updateCurrencyText();
+    }
+
+    function updateCurrencyText() {
+        lblMainCurrencyText.text(`${save.currencies.mainCurrency}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${save.generation.mainPerSecond}/s)` : "")}+(${save.generation.clickPower}/c)`);
     }
 })
