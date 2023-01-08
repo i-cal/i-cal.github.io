@@ -42,7 +42,7 @@ $(function() {
     }
 
     function saveGameData(isAutoSave) {
-        if(isAutoSave) {
+        if(isAutoSave === true) {
             console.log("Autosaving...");
         }
         
@@ -190,19 +190,50 @@ $(function() {
     }
 
     /* Settings code */
+    // Manual Save
+    var settingsSaveButton = $("#settingsSaveButton");
+    var settingsManualSaveFinished = $("#settingsManualSaveFinished");
+    settingsSaveButton.on("click", function() {
+        saveGameData();
+        settingsSaveButton.slideToggle();
+        settingsManualSaveFinished.slideToggle();
+        settingsSaveButton.prop("disabled", true);
+        var anim = setInterval(() => {
+            settingsManualSaveFinished.slideToggle();
+            clearInterval(anim);
+            settingsSaveButton.prop("disabled", false);
+            settingsSaveButton.slideToggle();
+        }, 3000);
+    });
+
     // Autosave Enabled
     var settingAutosaveEnabled = $("#settingAutosaveEnabled");
+    var autosaveDisabledFlavorText = $(".autosaveDisabledFlavorText");
+    var settingAutosaveIntervalDiv = $("#settingAutosaveIntervalDiv");
+    
+    if(save.autoSaveEnabled) {
+        autosaveDisabledFlavorText.hide();
+        settingAutosaveIntervalDiv.show();
+    } else {
+        autosaveDisabledFlavorText.show();
+        settingAutosaveIntervalDiv.hide();
+    }
+
     settingAutosaveEnabled.on("click", function() {
         console.log("Autosave enabled: " + settingAutosaveEnabled.prop("checked"));
         save.autoSaveEnabled = settingAutosaveEnabled.prop("checked");
         settingAutosaveInterval.prop("disabled", !save.autoSaveEnabled);
-        
+        settingAutosaveIntervalDiv.slideToggle();
+
         if(save.autoSaveEnabled) {
             autosaveTimer = setInterval(() => {
                 saveGameData();
             }, save.autoSaveInterval);
+
+            autosaveDisabledFlavorText.slideToggle();
         } else {
             clearInterval(autosaveTimer);
+            autosaveDisabledFlavorText.slideToggle();
         }
 
         saveGameData(); // To save the new setting

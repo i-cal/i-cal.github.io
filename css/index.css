@@ -18,3 +18,22 @@ nav {
 #mainDiv, #shopDiv, #devToDoDiv, #settingsDiv {
     padding: 15px;
 }
+
+#settingsSaveButton {
+    display: block;
+}
+
+.settingsBox {
+    display: block;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 6px gray;
+    width: 50%;
+}
+
+small {
+    font-style: italic;
+}
