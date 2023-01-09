@@ -89,7 +89,7 @@ $(function() {
             if(difference > 1) {
                 navMainCurrencyText.hide();
     
-                offlineGainsText.text(`You earned ${offlineGains}u while you were away`);
+                offlineGainsText.text(`You earned ${offlineGains.toLocaleString()}u while you were away`);
                 offlineGainsText.slideToggle();
     
                 var anim = setInterval(() => {
@@ -640,7 +640,7 @@ $(function() {
                 firstClickDoublerFlavorText.hide();    
             }
 
-            firstClickDoublerFlavorText.text(`Clicking power is now ${save.generation.clickPower}u/c!`);
+            firstClickDoublerFlavorText.text(`Clicking power is now ${save.generation.clickPower.toLocaleString()}u/c!`);
             firstClickDoublerFlavorText.slideDown();
 
             firstClickDoublerAnimLock = true;
@@ -656,7 +656,7 @@ $(function() {
     function updateFirstClickDoublerTexts() {
         if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
             buyClickUpgradeButton.prop("disabled", !(save.currencies.mainCurrency >= currentFirstClickDoublerPrice));
-            buyClickUpgradeButton.text(`Buy (${currentFirstClickDoublerPrice}u)`);
+            buyClickUpgradeButton.text(`Buy (${currentFirstClickDoublerPrice.toLocaleString()}u)`);
         } else {
             buyClickUpgradeButton.prop("disabled", true);
             buyClickUpgradeButton.text(`Maxed!`);
@@ -728,7 +728,7 @@ $(function() {
                 tier1MainGenIncreaseFlavorText.hide();    
             }
 
-            tier1MainGenIncreaseFlavorText.text(`Tier 1 Generator power is now ${save.generation.firstMainGeneratorPower}u/s!`);
+            tier1MainGenIncreaseFlavorText.text(`Tier 1 Generator power is now ${save.generation.firstMainGeneratorPower.toLocaleString()}u/s!`);
             tier1MainGenIncreaseFlavorText.slideDown();
 
             tier1MainGenAnimLock = true;
@@ -744,12 +744,12 @@ $(function() {
     function updatetier1MainGenTexts() {
         if(save.generation.firstMainGenerators < MAX_TIER_1_GENS) {
             buytier1MainGenButton.prop("disabled", !(save.currencies.mainCurrency >= currentTier1MainGenPrice));
-            buytier1MainGenButton.text(`Buy (${currentTier1MainGenPrice}u)`);
-            tier1MainGenDescriptionText.text(`Increases idle production to ${save.generation.firstMainGeneratorPower == 0 ? 1000 : save.generation.firstMainGeneratorPower * 2}u/s`);
+            buytier1MainGenButton.text(`Buy (${currentTier1MainGenPrice.toLocaleString()}u)`);
+            tier1MainGenDescriptionText.text(`Increases idle production to ${(save.generation.firstMainGeneratorPower == 0 ? 1000 : save.generation.firstMainGeneratorPower * 2).toLocaleString()}u/s`);
         } else {
             buytier1MainGenButton.prop("disabled", true);
             buytier1MainGenButton.text(`Maxed!`);
-            tier1MainGenDescriptionText.text(`Tier 1 idle production is maxed at ${save.generation.firstMainGeneratorPower}u/s.`);
+            tier1MainGenDescriptionText.text(`Tier 1 idle production is maxed at ${save.generation.firstMainGeneratorPower.toLocaleString()}u/s.`);
         }
 
         tier1MainGenCountText.text(`${save.generation.firstMainGenerators}/${MAX_TIER_1_GENS}`);
@@ -823,6 +823,6 @@ $(function() {
     }
 
     function updateCurrencyText() {
-        navMainCurrencyText.text(`${Math.floor(save.currencies.mainCurrency)}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${save.generation.mainPerSecond}u/s)` : "")}+(${save.generation.clickPower}u/c)`);
+        navMainCurrencyText.text(`${(Math.floor(save.currencies.mainCurrency)).toLocaleString()}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${(save.generation.mainPerSecond).toLocaleString()}u/s)` : "")}+(${save.generation.clickPower.toLocaleString()}u/c)`);
     }
 })
