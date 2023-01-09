@@ -7,7 +7,7 @@ $(function() {
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
     const OP_PLS_NERF = 0.75;
-    const SAVEFILE_VERSION = 6;
+    const SAVEFILE_VERSION = 7;
 
     const HOME = "home";
     const SHOP = "shop";
@@ -58,6 +58,7 @@ $(function() {
             lastOpenPage: HOME,
             lastSaved: new Date(),
             settings: {
+                darkModeEnabled: false,
                 autoSaveEnabled: true,
                 autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
                 tickRate: 50,
@@ -169,6 +170,11 @@ $(function() {
             // Version < 6
             if(save.settings.OPEnabled == undefined) {
                 save.settings.OPEnabled = false;
+            }
+
+            // Version < 7
+            if(save.settings.darkModeEnabled == undefined) {
+                save.settings.darkModeEnabled = false;
             }
         }
     }
@@ -368,6 +374,24 @@ $(function() {
             settingsSaveButton.slideToggle();
         }, 3000);
     });
+
+    // Dark Mode
+    var settingsDarkModeToggle = $("#settingsDarkModeToggle");
+
+    settingsDarkModeToggle.prop("checked", save.settings.darkModeEnabled);
+
+    if(save.settings.darkModeEnabled) {
+        $('body').toggleClass('dark-mode');
+        $('nav').toggleClass('bg-light navbar-light navbar-dark bg-dark');
+    }
+
+    settingsDarkModeToggle.on('click', function() {
+        $('body').toggleClass('dark-mode');
+        $('nav').toggleClass('bg-light navbar-light navbar-dark bg-dark');
+        save.settings.darkModeEnabled = settingsDarkModeToggle.prop("checked");
+        saveGameData();
+    });
+      
 
     // Autosave Enabled
     var settingAutosaveEnabled = $("#settingAutosaveEnabled");
