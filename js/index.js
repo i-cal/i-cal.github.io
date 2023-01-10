@@ -12,7 +12,6 @@ $(function() {
     const HOME = "home";
     const SHOP = "shop";
     const SETTINGS = "settings";
-    const DEVTODO = "devtodo";
 
     const MAX_FIRST_CLICK_DOUBLER = 10;
     const MAX_TIER_1_GENS = 10;
@@ -28,12 +27,10 @@ $(function() {
     var homeLink = $("#homeLink");
     var shopLink = $("#shopLink");
     var settingsLink = $("#settingsLink");
-    var devToDoLink = $("#devToDoLink");
 
     var homeDiv = $("#mainDiv");
     var shopDiv = $("#shopDiv");
     var settingsDiv = $("#settingsDiv");
-    var devToDoDiv = $("#devToDoDiv");
 
     var navMainCurrencyText = $("#navMainCurrency");
 
@@ -255,11 +252,6 @@ $(function() {
         $(this).parent().addClass("active");
     });
 
-    devToDoLink.on("click", function() {
-        switchToPage(DEVTODO);
-        $(this).parent().addClass("active");
-    });
-
     function switchToPage(target, animLength) {
         if(!pageSwitchLocked) {
             if(currentPage != target) {
@@ -299,14 +291,6 @@ $(function() {
                             duration: animLength
                         });
                         break;
-                    case DEVTODO:
-                        devToDoDiv.slideToggle({
-                            complete: function() {
-                                doTheShow(animLength);
-                            },
-                            duration: animLength
-                        });
-                        break;
                 }
     
                 function doTheShow(animLength) {
@@ -332,12 +316,6 @@ $(function() {
                         case SETTINGS:
                             console.log('Switching to Settings page.');
                             settingsDiv.slideToggle({
-                                duration: animLength
-                            });
-                            break;
-                        case DEVTODO:
-                            console.log('Switching to Dev To-Do page.');
-                            devToDoDiv.slideToggle({
                                 duration: animLength
                             });
                             break;
