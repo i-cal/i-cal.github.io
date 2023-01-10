@@ -7,7 +7,7 @@ $(function() {
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
     const OP_PLS_NERF = 0.75;
-    const SAVEFILE_VERSION = 9;
+    const SAVEFILE_VERSION = 10;
 
     const HOME = "home";
     const SHOP = "shop";
@@ -16,7 +16,7 @@ $(function() {
     const MAX_FIRST_CLICK_DOUBLER = 10;
     const MAX_TIER_1_GENS = 10;
 
-    const FULL_NUMBER_FORMAT = "full";
+    const COMMAS_NUMBER_FORMAT = "commas";
     const PERIOD_NUMBER_FORMAT = "periods";
     const SCIENTIFIC_NUMBER_FORMAT = "scientific";
 
@@ -60,7 +60,7 @@ $(function() {
             lastSaved: new Date(),
             settings: {
                 darkModeEnabled: false,
-                numberFormat: FULL_NUMBER_FORMAT,
+                numberFormat: COMMAS_NUMBER_FORMAT,
                 autoSaveEnabled: true,
                 autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
                 tickRate: 50,
@@ -191,7 +191,12 @@ $(function() {
 
             // Version < 9 - IC-1
             if(save.settings.numberFormat == undefined) {
-                save.settings.numberFormat = FULL_NUMBER_FORMAT;
+                save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
+            }
+
+            // Version < 10 - IC-9
+            if(save.settings.numberFormat == "full") {
+                save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
             }
         }
     }
@@ -408,8 +413,8 @@ $(function() {
         var chosen = $(this).val();
         
         switch(chosen) {
-            case FULL_NUMBER_FORMAT:
-                save.settings.numberFormat = FULL_NUMBER_FORMAT;
+            case COMMAS_NUMBER_FORMAT:
+                save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
                 break;
             case PERIOD_NUMBER_FORMAT:
                 save.settings.numberFormat = PERIOD_NUMBER_FORMAT;
@@ -418,7 +423,7 @@ $(function() {
                 save.settings.numberFormat = SCIENTIFIC_NUMBER_FORMAT;
                 break;
             default:
-                save.settings.numberFormat = FULL_NUMBER_FORMAT;
+                save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
                 break;
         }
 
@@ -438,7 +443,7 @@ $(function() {
         var formatted;
 
         switch(save.settings.numberFormat) {
-            case FULL_NUMBER_FORMAT:
+            case COMMAS_NUMBER_FORMAT:
                 formatted = numberToFormat.toLocaleString();
                 break;
             case PERIOD_NUMBER_FORMAT:
