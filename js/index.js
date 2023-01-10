@@ -59,7 +59,7 @@ $(function() {
             lastOpenPage: HOME,
             lastSaved: new Date(),
             settings: {
-                darkModeEnabled: false,
+                darkModeEnabled: true,
                 numberFormat: COMMAS_NUMBER_FORMAT,
                 autoSaveEnabled: true,
                 autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
@@ -389,6 +389,7 @@ $(function() {
 
     // Dark Mode
     var settingsDarkModeToggle = $("#settingsDarkModeToggle");
+    var settingsDarkModeFlavorText = $("#settingsDarkModeFlavorText");
 
     settingsDarkModeToggle.prop("checked", save.settings.darkModeEnabled);
 
@@ -402,6 +403,16 @@ $(function() {
         $('nav').toggleClass('bg-light navbar-light navbar-dark bg-dark');
         save.settings.darkModeEnabled = settingsDarkModeToggle.prop("checked");
         saveGameData();
+
+        if(!($(this).prop("checked"))) {
+            settingsDarkModeFlavorText.text("FLASHBANG OUT");
+            settingsDarkModeFlavorText.slideToggle();
+
+            var settingsDarkModeFlavorTextAnim = setInterval(() => {
+                settingsDarkModeFlavorText.slideToggle();
+                clearInterval(settingsDarkModeFlavorTextAnim);
+            }, 3000);
+        }
     });
     
     // Number Format
