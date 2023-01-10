@@ -82,32 +82,36 @@ $(function() {
 
         // Offline progression (75% of estimated online, based off of units per second)
         if(save.settings.OPEnabled) {
-            var now = new Date();
-            var difference = (now.getTime() - new Date(save.lastSaved).getTime()) / 1000;
-            var offlineGains = Math.floor((difference * save.generation.mainPerSecond) * OP_PLS_NERF);
-    
-            var offlineGainsText = $("#offlineGainsText");
-    
-            if(difference > 1) {
-                navMainCurrencyText.hide();
-    
-                offlineGainsText.text(`You earned ${formatNumberString(offlineGains)}u while you were away`);
-
-                offlineGainsText.slideToggle();
-    
-                var anim = setInterval(() => {
-                    offlineGainsText.slideToggle();
-                    navMainCurrencyText.slideDown();
-                    offlineGainsText.text("");
-                    clearInterval(anim);
-                }, 3000);
-            }
-    
-            save.currencies.mainCurrency += offlineGains;
+            calculateOfflineGain();
         }
 
         // Goto last open page
         switchToPage(save.lastOpenPage, 0);
+    }
+
+    function calculateOfflineGain() {
+        var now = new Date();
+        var difference = (now.getTime() - new Date(save.lastSaved).getTime()) / 1000;
+        var offlineGains = Math.floor((difference * save.generation.mainPerSecond) * OP_PLS_NERF);
+
+        var offlineGainsText = $("#offlineGainsText");
+
+        if(difference > 1) {
+            navMainCurrencyText.hide();
+
+            offlineGainsText.text(`You earned ${formatNumberString(offlineGains)}u while you were away`);
+
+            offlineGainsText.slideToggle();
+
+            var anim = setInterval(() => {
+                offlineGainsText.slideToggle();
+                navMainCurrencyText.slideDown();
+                offlineGainsText.text("");
+                clearInterval(anim);
+            }, 3000);
+        }
+
+        save.currencies.mainCurrency += offlineGains;
     }
 
     function fixSaveFiles(saveData) {
