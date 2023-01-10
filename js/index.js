@@ -7,7 +7,7 @@ $(function() {
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
     const OP_PLS_NERF = 0.75;
-    const SAVEFILE_VERSION = 7;
+    const SAVEFILE_VERSION = 8;
 
     const HOME = "home";
     const SHOP = "shop";
@@ -172,6 +172,11 @@ $(function() {
             // Version < 7
             if(save.settings.darkModeEnabled == undefined) {
                 save.settings.darkModeEnabled = false;
+            }
+
+            // Version < 8 - IC-7
+            if(save.lastOpenPage == "devtodo") {
+                save.lastOpenPage = "home";
             }
         }
     }
