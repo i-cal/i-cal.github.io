@@ -335,6 +335,15 @@ $(function() {
                                 duration: animLength
                             });
                             break;
+                        default:
+                            console.log('Switching to Home page.');
+                            homeDiv.parent
+                            homeDiv.slideDown({
+                                duration: 0
+                            });
+                            target = HOME;
+                            save.lastOpenPage = HOME;
+                            break;
                     }
     
                     // Update the current page variable
