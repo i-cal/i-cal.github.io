@@ -36,12 +36,12 @@
             </div>
         </nav>
         <nav class="navbar navbar-light bg-light">
-            <span id="navMainCurrency">0</span>
+            <span id="navUnitsText">0</span>
             <span id="offlineGainsText" style="display:none;"></span>
         </nav>
         <!-- Main (Home) Div -->
         <div id="mainDiv">
-            <p>This button will generate 1 unit of the main currency every time it is clicked.<br>Try clicking once, and then holding the enter button down to reach max efficiency.</p>
+            <p>This button will generate <span id="unitButtonDescription">1 unit</span> every time it is clicked.<br>Try clicking once, and then holding the enter button down to reach max efficiency.</p>
             <button id="btnClickMe">Click me!</button>
         </div>
         <!-- Shop Div -->
@@ -68,17 +68,17 @@
                     <div class="col-2"></div>
                     <div class="col-5 px-15 shopBox">
                         <h3>Idle Generation</h3>
-                        <div class="shopItem tier1MainGenDiv">
+                        <div class="shopItem tier1UnitGenDiv">
                             <div style="display:block;">
-                                <label for="buyTier1MainGenButton">Tier 1 Main Generator</label>
-                                <small id="tier1MainGenCountText">0/10</small>
+                                <label for="buyTier1UnitGenButton">Tier 1 Unit Generator</label>
+                                <small id="tier1UnitGenCountText">0/10</small>
                             </div>
                             <div>
-                                <small id="tier1MainGenDescriptionText">Increases idle production by 1000u/s</small>
+                                <small id="tier1UnitGenDescriptionText">Increases idle production by 1000u/s</small>
                             </div>
                             <div>
-                                <button id="buyTier1MainGenButton">Buy</button>
-                                <small id="tier1MainGenIncreaseFlavorText" style="display:none;"></small>
+                                <button id="buyTier1UnitGenButton">Buy</button>
+                                <small id="tier1UnitGenIncreaseFlavorText" style="display:none;"></small>
                             </div>
                         </div>
                     </div>
