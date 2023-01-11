@@ -1,20 +1,22 @@
+var save;
+
 $(function() {
     console.log('Hello, world!');
 
     // Important constants/variables
-    const MAIN_CURRENCY_ABBR = "u";
+    const UNITS_ABBR = "u";
     const MIN_AUTOSAVE_INTERVAL = 1000;
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
     const OP_PLS_NERF = 0.75;
-    const SAVEFILE_VERSION = 10;
+    const SAVEFILE_VERSION = 12;
 
     const HOME = "home";
     const SHOP = "shop";
     const SETTINGS = "settings";
 
     const MAX_FIRST_CLICK_DOUBLER = 10;
-    const MAX_TIER_1_GENS = 10;
+    const MAX_TIER_1_UNIT_GENS = 10;
 
     const COMMAS_NUMBER_FORMAT = "commas";
     const PERIOD_NUMBER_FORMAT = "periods";
@@ -36,39 +38,41 @@ $(function() {
     var shopDiv = $("#shopDiv");
     var settingsDiv = $("#settingsDiv");
 
-    var navMainCurrencyText = $("#navMainCurrency");
+    var navUnitsText = $("#navUnitsText");
+
+    var starterSave = {
+        currencies: {
+            units: 0,
+        },
+        generation: {
+            clickPower: 1,
+            firstClickDoublers: 0,
+            unitsPerSecond: 0,
+            baseProdMult: 1,
+            tier1UnitGenerators: 0,
+            tier1UnitGeneratorPower: 0,
+            tier2UnitGenerators: 0,
+            tier3UnitGenerators: 0
+        },
+        lastOpenPage: HOME,
+        lastSaved: new Date(),
+        settings: {
+            darkModeEnabled: true,
+            numberFormat: COMMAS_NUMBER_FORMAT,
+            autoSaveEnabled: true,
+            autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
+            tickRate: 50,
+            customTickRateAllowed: false,
+            OPEnabled: false
+        },
+        version: SAVEFILE_VERSION
+    };
 
     // Attempt to load save data
     saveCookie = getCookie("save");
 
     if(saveCookie == "") {
-        save = {
-            currencies: {
-                mainCurrency: 0,
-            },
-            generation: {
-                clickPower: 1,
-                firstClickDoublers: 0,
-                mainPerSecond: 0,
-                mainProdMult: 1,
-                firstMainGenerators: 0,
-                firstMainGeneratorPower: 0,
-                secondMainGenerators: 0,
-                thirdMainGenerators: 0
-            },
-            lastOpenPage: HOME,
-            lastSaved: new Date(),
-            settings: {
-                darkModeEnabled: true,
-                numberFormat: COMMAS_NUMBER_FORMAT,
-                autoSaveEnabled: true,
-                autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
-                tickRate: 50,
-                customTickRateAllowed: false,
-                OPEnabled: false
-            },
-            version: SAVEFILE_VERSION
-        };
+        save = starterSave;
     } else {
         save = JSON.parse(saveCookie);
         
@@ -92,12 +96,12 @@ $(function() {
     function calculateOfflineGain() {
         var now = new Date();
         var difference = (now.getTime() - new Date(save.lastSaved).getTime()) / 1000;
-        var offlineGains = Math.floor((difference * save.generation.mainPerSecond) * OP_PLS_NERF);
+        var offlineGains = Math.floor((difference * save.generation.unitsPerSecond) * OP_PLS_NERF);
 
         var offlineGainsText = $("#offlineGainsText");
 
         if(difference > 1) {
-            navMainCurrencyText.hide();
+            navUnitsText.hide();
 
             offlineGainsText.text(`You earned ${formatNumberString(offlineGains)}u while you were away`);
 
@@ -105,13 +109,13 @@ $(function() {
 
             var anim = setInterval(() => {
                 offlineGainsText.slideToggle();
-                navMainCurrencyText.slideDown();
+                navUnitsText.slideDown();
                 offlineGainsText.text("");
                 clearInterval(anim);
             }, 3000);
         }
 
-        save.currencies.mainCurrency += offlineGains;
+        save.currencies.units += offlineGains;
     }
 
     function fixSaveFiles(saveData) {
@@ -119,9 +123,10 @@ $(function() {
             // Fix if save was from before currencies were separate JSON object
             if(save.currencies == undefined) {
                 save.currencies = {
-                    mainCurrency: save.mainCurrency
+                    units: save.units
                 }
 
+                // Units were still called mainCurrency in the save file when this fix was relevant.
                 delete save.mainCurrency;
             }
 
@@ -148,15 +153,7 @@ $(function() {
 
             // If before shop & generation update, generation attributes need to be added
             if(save.generation == undefined) {
-                save.generation = {
-                    clickPower: 1,
-                    firstClickDoublers: 0,
-                    mainPerSecond: 0,
-                    mainProdMult: 1,
-                    firstMainGenerators: 0,
-                    secondMainGenerators: 0,
-                    thirdMainGenerators: 0
-                };
+                save.generation = starterSave.generation;
             }
 
             // Version < 3
@@ -165,9 +162,9 @@ $(function() {
             }
 
             // Version < 4
-            if(save.generation.firstMainGeneratorPower == undefined) {
-                save.generation.firstMainGeneratorPower = 0;
-            }
+            // if(save.generation.firstMainGeneratorPower == undefined) {
+            //     save.generation.firstMainGeneratorPower = 0;
+            // }
 
             // Version < 5
             if(save.settings.customTickRateAllowed == undefined) {
@@ -197,6 +194,50 @@ $(function() {
             // Version < 10 - IC-9
             if(save.settings.numberFormat == "full") {
                 save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
+            }
+
+            // Version < 11 - IC-15
+            if(save.currencies.units == undefined) {
+                save.currencies.units = save.currencies.mainCurrency;
+
+                delete save.currencies.mainCurrency;
+            }
+            
+            // Version < 12 - IC-15
+            if(save.generation.unitsPerSecond == undefined) {
+                save.generation.unitsPerSecond = save.generation.mainPerSecond;
+
+                delete save.generation.mainPerSecond;
+            }
+
+            if(save.generation.baseProdMult == undefined) {
+                save.generation.baseProdMult = save.generation.mainProdMult;
+
+                delete save.generation.mainProdMult;
+            }
+
+            if(save.generation.tier1UnitGenerators == undefined) {
+                save.generation.tier1UnitGenerators = save.generation.firstMainGenerators;
+
+                delete save.generation.firstMainGenerators;
+            }
+
+            if(save.generation.tier1UnitGeneratorPower == undefined) {
+                save.generation.tier1UnitGeneratorPower = save.generation.firstMainGeneratorPower;
+
+                delete save.generation.firstMainGeneratorPower;
+            }
+
+            if(save.generation.tier2UnitGenerators == undefined) {
+                save.generation.tier2UnitGenerators = save.generation.secondMainGenerators;
+
+                delete save.generation.secondMainGenerators;
+            }
+
+            if(save.generation.tier3UnitGenerators == undefined) {
+                save.generation.tier3UnitGenerators = save.generation.thirdMainGenerators;
+
+                delete save.generation.thirdMainGenerators;
             }
         }
     }
@@ -229,7 +270,7 @@ $(function() {
         save.lastOpenPage = currentPage;
         save.version = SAVEFILE_VERSION;
 
-        save.currencies.mainCurrency = Math.floor(save.currencies.mainCurrency);
+        save.currencies.units = Math.floor(save.currencies.units);
 
         setCookie("save", JSON.stringify(save), 1);
         
@@ -445,7 +486,7 @@ $(function() {
             updateFirstClickDoublerTexts();
         }
         
-        updatetier1MainGenTexts();
+        updatetier1UnitGenTexts();
 
         saveGameData();
     });
@@ -664,9 +705,8 @@ $(function() {
     }
 
     if(doDevPrices) {
-        shopLink.css({
-            color: "red",
-            fontWeight: "bolder"
+        $("body").css({
+            backgroundColor: "darkred"
         });
     }
 
@@ -697,9 +737,9 @@ $(function() {
 
     buyClickUpgradeButton.on("click", function() {
         // Check if user can afford
-        if(save.currencies.mainCurrency >= currentFirstClickDoublerPrice) {
+        if(save.currencies.units >= currentFirstClickDoublerPrice) {
             // Subtract cost from units
-            save.currencies.mainCurrency -= currentFirstClickDoublerPrice;
+            save.currencies.units -= currentFirstClickDoublerPrice;
             
             // Update doubler count
             save.generation.firstClickDoublers += 1;
@@ -715,6 +755,9 @@ $(function() {
 
             // Update currency text
             updateCurrencyText();
+
+            // Update main page button description
+            unitButtonDescription.text(`${formatNumberString(save.generation.clickPower)} units`);
 
             // Show flavor text
             if(firstClickDoublerAnimLock) {
@@ -737,7 +780,7 @@ $(function() {
 
     function updateFirstClickDoublerTexts() {
         if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
-            buyClickUpgradeButton.prop("disabled", !(save.currencies.mainCurrency >= currentFirstClickDoublerPrice));
+            buyClickUpgradeButton.prop("disabled", !(save.currencies.units >= currentFirstClickDoublerPrice));
             buyClickUpgradeButton.text(`Buy (${formatNumberString(currentFirstClickDoublerPrice)}u)`);
         } else {
             buyClickUpgradeButton.prop("disabled", true);
@@ -756,12 +799,12 @@ $(function() {
     }
 
     // Tier 1 Main Generator
-    var buytier1MainGenButton = $("#buyTier1MainGenButton");
-    var tier1MainGenCountText = $("#tier1MainGenCountText");
-    var tier1MainGenDescriptionText = $("#tier1MainGenDescriptionText");
-    var tier1MainGenIncreaseFlavorText = $("#tier1MainGenIncreaseFlavorText");
+    var buytier1UnitGenButton = $("#buyTier1UnitGenButton");
+    var tier1UnitGenCountText = $("#tier1UnitGenCountText");
+    var tier1UnitGenDescriptionText = $("#tier1UnitGenDescriptionText");
+    var tier1UnitGenIncreaseFlavorText = $("#tier1UnitGenIncreaseFlavorText");
 
-    var tier1MainGenPrices = {
+    var tier1UnitGenPrices = {
         0: 57600,
         1: 175200,
         2: 352800,
@@ -774,74 +817,74 @@ $(function() {
         9: 77376000 
     }
 
-    var currentTier1MainGenPrice;
+    var currentTier1UnitGenPrice;
 
-    updatetier1MainGenPrice();
-    updatetier1MainGenTexts();
+    updatetier1UnitGenPrice();
+    updatetier1UnitGenTexts();
 
-    var tier1MainGenAnimLock = false;
-    var tier1MainGenFlavorAnimation;
+    var tier1UnitGenAnimLock = false;
+    var tier1UnitGenFlavorAnimation;
 
-    buytier1MainGenButton.on("click", function() {
+    buytier1UnitGenButton.on("click", function() {
         // Check if user can afford
-        if(save.currencies.mainCurrency >= currentTier1MainGenPrice) {
+        if(save.currencies.units >= currentTier1UnitGenPrice) {
             // Subtract cost from units
-            save.currencies.mainCurrency -= currentTier1MainGenPrice;
+            save.currencies.units -= currentTier1UnitGenPrice;
             
             // Update gen count
-            save.generation.firstMainGenerators += 1;
+            save.generation.tier1UnitGenerators += 1;
             
             // Update gain per second
-            save.generation.firstMainGeneratorPower = save.generation.firstMainGeneratorPower == 0 ? 1000 : save.generation.firstMainGeneratorPower * 2;
-            updateMainPerSecond();
+            save.generation.tier1UnitGeneratorPower = save.generation.tier1UnitGeneratorPower == 0 ? 1000 : save.generation.tier1UnitGeneratorPower * 2;
+            updateUnitsPerSecond();
 
             // Update current price
-            updatetier1MainGenPrice();
+            updatetier1UnitGenPrice();
 
             // Update texts
-            updatetier1MainGenTexts();
+            updatetier1UnitGenTexts();
 
             // Update currency text
             updateCurrencyText();
 
             // Show flavor text
-            if(tier1MainGenAnimLock) {
-                clearInterval(tier1MainGenFlavorAnimation);
-                tier1MainGenIncreaseFlavorText.hide();    
+            if(tier1UnitGenAnimLock) {
+                clearInterval(tier1UnitGenFlavorAnimation);
+                tier1UnitGenIncreaseFlavorText.hide();    
             }
 
-            tier1MainGenIncreaseFlavorText.text(`Tier 1 Generator power is now ${formatNumberString(save.generation.firstMainGeneratorPower)}u/s!`);
-            tier1MainGenIncreaseFlavorText.slideDown();
+            tier1UnitGenIncreaseFlavorText.text(`Tier 1 Unit Generator power is now ${formatNumberString(save.generation.tier1UnitGeneratorPower)}u/s!`);
+            tier1UnitGenIncreaseFlavorText.slideDown();
 
-            tier1MainGenAnimLock = true;
+            tier1UnitGenAnimLock = true;
             
-            tier1MainGenFlavorAnimation = setInterval(() => {
-                tier1MainGenIncreaseFlavorText.slideUp();
-                tier1MainGenAnimLock = false;
-                clearInterval(tier1MainGenFlavorAnimation);
+            tier1UnitGenFlavorAnimation = setInterval(() => {
+                tier1UnitGenIncreaseFlavorText.slideUp();
+                tier1UnitGenAnimLock = false;
+                clearInterval(tier1UnitGenFlavorAnimation);
             }, 3000);
         }
     });
 
-    function updatetier1MainGenTexts() {
-        if(save.generation.firstMainGenerators < MAX_TIER_1_GENS) {
-            buytier1MainGenButton.prop("disabled", !(save.currencies.mainCurrency >= currentTier1MainGenPrice));
-            buytier1MainGenButton.text(`Buy (${formatNumberString(currentTier1MainGenPrice)}u)`);
-            tier1MainGenDescriptionText.text(`Increases idle production to ${formatNumberString(save.generation.firstMainGeneratorPower == 0 ? 1000 : save.generation.firstMainGeneratorPower * 2)}u/s`);
+    function updatetier1UnitGenTexts() {
+        if(save.generation.tier1UnitGenerators < MAX_TIER_1_UNIT_GENS) {
+            buytier1UnitGenButton.prop("disabled", !(save.currencies.units >= currentTier1UnitGenPrice));
+            buytier1UnitGenButton.text(`Buy (${formatNumberString(currentTier1UnitGenPrice)}u)`);
+            tier1UnitGenDescriptionText.text(`Increases idle production to ${formatNumberString(save.generation.tier1UnitGeneratorPower == 0 ? 1000 : save.generation.tier1UnitGeneratorPower * 2)}u/s`);
         } else {
-            buytier1MainGenButton.prop("disabled", true);
-            buytier1MainGenButton.text(`Maxed!`);
-            tier1MainGenDescriptionText.text(`Tier 1 idle production is maxed at ${formatNumberString(save.generation.firstMainGeneratorPower)}u/s.`);
+            buytier1UnitGenButton.prop("disabled", true);
+            buytier1UnitGenButton.text(`Maxed!`);
+            tier1UnitGenDescriptionText.text(`Tier 1 idle production is maxed at ${formatNumberString(save.generation.tier1UnitGeneratorPower)}u/s.`);
         }
 
-        tier1MainGenCountText.text(`${save.generation.firstMainGenerators}/${MAX_TIER_1_GENS}`);
+        tier1UnitGenCountText.text(`${save.generation.tier1UnitGenerators}/${MAX_TIER_1_UNIT_GENS}`);
     }
 
-    function updatetier1MainGenPrice() {
+    function updatetier1UnitGenPrice() {
         if(doDevPrices) {
-            currentTier1MainGenPrice = devPriceScale[save.generation.firstMainGenerators];
+            currentTier1UnitGenPrice = devPriceScale[save.generation.tier1UnitGenerators];
         } else {
-            currentTier1MainGenPrice = tier1MainGenPrices[save.generation.firstMainGenerators];
+            currentTier1UnitGenPrice = tier1UnitGenPrices[save.generation.tier1UnitGenerators];
         }
     }
 
@@ -852,9 +895,9 @@ $(function() {
 
     function doTick() {
         // Calculate idle gain
-        if(save.generation.mainPerSecond > 0) {
+        if(save.generation.unitsPerSecond > 0) {
             var gain = calculateIdleGain();
-            save.currencies.mainCurrency += gain;
+            save.currencies.units += gain;
 
             // Update currency text
             updateCurrencyText();
@@ -868,8 +911,8 @@ $(function() {
             }
             
             // If unbought Tier 1 Main Generators
-            if(save.generation.firstMainGenerators < MAX_TIER_1_GENS) {
-                updatetier1MainGenTexts();
+            if(save.generation.tier1UnitGenerators < MAX_TIER_1_UNIT_GENS) {
+                updatetier1UnitGenTexts();
             }
         }
     }
@@ -882,29 +925,34 @@ $(function() {
         }, save.settings.tickRate);
     }
 
-    function updateMainPerSecond() {
-        save.generation.mainPerSecond = save.generation.firstMainGeneratorPower; // add future generator powers to this
+    function updateUnitsPerSecond() {
+        save.generation.unitsPerSecond = save.generation.tier1UnitGeneratorPower; // add future generator powers to this
     }
 
     function calculateIdleGain() {
-        var gainPerMillisecond = save.generation.mainPerSecond / 1000;
+        var gainPerMillisecond = save.generation.unitsPerSecond / 1000;
         var gainPerTick = gainPerMillisecond * save.settings.tickRate;
         return gainPerTick;
     }
 
     /* Main Currency Button Code */
     var btnClickMe = $("#btnClickMe");
+    var unitButtonDescription = $("#unitButtonDescription");
+
+    if(save.generation.clickPower > 1) {
+        unitButtonDescription.text(`${formatNumberString(save.generation.clickPower)} units`);
+    }
 
     updateCurrencyText();
 
-    btnClickMe.on("click", mainCurrencyButtonClicked);
+    btnClickMe.on("click", unitsButtonClicked);
 
-    function mainCurrencyButtonClicked() {
-        save.currencies.mainCurrency += save.generation.clickPower * save.generation.mainProdMult;
+    function unitsButtonClicked() {
+        save.currencies.units += save.generation.clickPower * save.generation.baseProdMult;
         updateCurrencyText();
     }
 
     function updateCurrencyText() {
-        navMainCurrencyText.text(`${formatNumberString(Math.floor(save.currencies.mainCurrency))}${MAIN_CURRENCY_ABBR}${(save.generation.mainPerSecond > 0 ? `+(${formatNumberString(save.generation.mainPerSecond)}u/s)` : "")}+(${formatNumberString(save.generation.clickPower)}u/c)`);
+        navUnitsText.text(`${formatNumberString(Math.floor(save.currencies.units))}${UNITS_ABBR}${(save.generation.unitsPerSecond > 0 ? `+(${formatNumberString(save.generation.unitsPerSecond)}u/s)` : "")}+(${formatNumberString(save.generation.clickPower)}u/c)`);
     }
 })
