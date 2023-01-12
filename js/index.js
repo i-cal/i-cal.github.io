@@ -1,74 +1,215 @@
-var save;
+// Imports
+import {resetTickInterval} from "./tick.js";
+import {updateUnitsPerSecond} from "./tick.js";
+import { startTicks } from "./tick.js";
 
-$(function() {
-    // Important constants/variables
-    const UNITS_ABBR = "u";
-    const MIN_AUTOSAVE_INTERVAL = 1000;
-    const MAX_AUTOSAVE_INTERVAL = 30000;
-    const DEF_AUTOSAVE_INTERVAL = 15000;
-    const OP_PLS_NERF = 0.75;
-    const SAVEFILE_VERSION = 13;
+// Exports
+export const constants = {
+    UNITS_ABBR: "u",
+    MIN_AUTOSAVE_INTERVAL : 1000,
+    MAX_AUTOSAVE_INTERVAL : 30000,
+    DEF_AUTOSAVE_INTERVAL : 15000,
+    OP_PLS_NERF : 0.75,
+    SAVEFILE_VERSION : 13,
 
-    const HOME = "home";
-    const SHOP = "shop";
-    const SETTINGS = "settings";
-
-    const MAX_FIRST_CLICK_DOUBLER = 10;
-    const MAX_TIER_1_UNIT_GENS = 10;
-
-    const COMMAS_NUMBER_FORMAT = "commas";
-    const PERIOD_NUMBER_FORMAT = "periods";
-    const SCIENTIFIC_NUMBER_FORMAT = "scientific";
-
-    var tickInterval;
-
-    var autosaveTimer;
-
-    var pageSwitchLocked = false;
-
-    var currentPage = HOME;
+    HOME : "home",
+    SHOP : "shop",
+    SETTINGS : "settings",
     
-    var homeLink = $("#homeLink");
-    var shopLink = $("#shopLink");
-    var settingsLink = $("#settingsLink");
+    MAX_FIRST_CLICK_DOUBLER : 10,
+    MAX_TIER_1_UNIT_GENS : 10,
+    COMMAS_NUMBER_FORMAT : "commas",
+    PERIOD_NUMBER_FORMAT : "periods",
+    SCIENTIFIC_NUMBER_FORMAT : "scientific"
+}
 
-    var homeDiv = $("#mainDiv");
-    var shopDiv = $("#shopDiv");
-    var settingsDiv = $("#settingsDiv");
+export var save;
+export var currentPage;
 
-    var navUnitsText = $("#navUnitsText");
+// Variables
+var autosaveTimer;
 
-    var starterSave = {
-        currencies: {
-            units: 0,
-        },
-        generation: {
-            clickPower: 1,
-            firstClickDoublers: 0,
-            unitsPerSecond: 0,
-            baseProdMult: 1,
-            tier1UnitGenerators: 0,
-            tier1UnitGeneratorPower: 0,
-            tier2UnitGenerators: 0,
-            tier3UnitGenerators: 0
-        },
-        lastOpenPage: HOME,
-        lastSaved: new Date(),
-        settings: {
-            darkModeEnabled: true,
-            numberFormat: COMMAS_NUMBER_FORMAT,
-            autoSaveEnabled: true,
-            autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
-            tickRate: 50,
-            customTickRateAllowed: false,
-            OPEnabled: false,
-            consoleLogsEnabled: false
-        },
-        version: SAVEFILE_VERSION
-    };
+var pageSwitchLocked = false;
 
+currentPage = constants.HOME;
+
+var homeLink = $("#homeLink");
+var shopLink = $("#shopLink");
+var settingsLink = $("#settingsLink");
+
+var homeDiv = $("#mainDiv");
+var shopDiv = $("#shopDiv");
+var settingsDiv = $("#settingsDiv");
+
+var navUnitsText = $("#navUnitsText");
+
+var starterSave = {
+    currencies: {
+        units: 0,
+    },
+    generation: {
+        clickPower: 1,
+        firstClickDoublers: 0,
+        unitsPerSecond: 0,
+        baseProdMult: 1,
+        tier1UnitGenerators: 0,
+        tier1UnitGeneratorPower: 0,
+        tier2UnitGenerators: 0,
+        tier3UnitGenerators: 0
+    },
+    lastOpenPage: constants.HOME,
+    lastSaved: new Date(),
+    settings: {
+        darkModeEnabled: true,
+        numberFormat: constants.COMMAS_NUMBER_FORMAT,
+        autoSaveEnabled: true,
+        autoSaveInterval: constants.DEF_AUTOSAVE_INTERVAL,
+        tickRate: 50,
+        customTickRateAllowed: false,
+        OPEnabled: false,
+        consoleLogsEnabled: false
+    },
+    version: constants.SAVEFILE_VERSION
+};
+
+/* Outer shop code */
+var doDevPrices = false;
+var devPriceScale = {
+    0: 0,
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+    7: 7,
+    8: 8,
+    9: 9
+}
+
+// First Click Doubler Variables and Functions
+var buyClickUpgradeButton = $("#buyClickUpgradeButton");
+var firstClickDoublerFlavorText = $("#clickUpgradeIncreaseFlavorText");
+var firstClickDoublersCountText = $("#firstClickDoublersCount");
+var firstClickDoublerPrices = {
+    0: 450,
+    1: 1800,
+    2: 5400,
+    3: 14400,
+    4: 36000,
+    5: 86400,
+    6: 201600,
+    7: 460800,
+    8: 1036800,
+    9: 2304000
+}
+
+var currentFirstClickDoublerPrice;
+
+var firstClickDoublerAnimLock = false;
+var firstClickDoublerFlavorAnimation;
+
+export function updateCurrencyText() {
+    navUnitsText.text(`${formatNumberString(Math.floor(save.currencies.units))}${constants.UNITS_ABBR}${(save.generation.unitsPerSecond > 0 ? `+(${formatNumberString(save.generation.unitsPerSecond)}u/s)` : "")}+(${formatNumberString(save.generation.clickPower)}u/c)`);
+}
+
+export function updateFirstClickDoublerTexts() {
+    if(save.generation.firstClickDoublers < constants.MAX_FIRST_CLICK_DOUBLER) {
+        buyClickUpgradeButton.prop("disabled", !(save.currencies.units >= currentFirstClickDoublerPrice));
+        buyClickUpgradeButton.text(`Buy (${formatNumberString(currentFirstClickDoublerPrice)}u)`);
+    } else {
+        buyClickUpgradeButton.prop("disabled", true);
+        buyClickUpgradeButton.text(`Maxed!`);
+    }
+
+    firstClickDoublersCountText.text(`${save.generation.firstClickDoublers}/${constants.MAX_FIRST_CLICK_DOUBLER}`);
+}
+
+function updateFirstClickDoublerPrice() {
+    if(doDevPrices) {
+        currentFirstClickDoublerPrice = devPriceScale[save.generation.firstClickDoublers];
+    } else {
+        currentFirstClickDoublerPrice = firstClickDoublerPrices[save.generation.firstClickDoublers];
+    }
+}
+
+// Tier 1 Unit Generator variables and functions
+var buytier1UnitGenButton = $("#buyTier1UnitGenButton");
+var tier1UnitGenCountText = $("#tier1UnitGenCountText");
+var tier1UnitGenDescriptionText = $("#tier1UnitGenDescriptionText");
+var tier1UnitGenIncreaseFlavorText = $("#tier1UnitGenIncreaseFlavorText");
+
+var tier1UnitGenPrices = {
+    0: 57600,
+    1: 175200,
+    2: 352800,
+    3: 710400,
+    4: 1488000,
+    5: 3225600,
+    6: 7123200,
+    7: 15820800,
+    8: 35078400,
+    9: 77376000 
+}
+
+var currentTier1UnitGenPrice;
+
+var tier1UnitGenAnimLock = false;
+var tier1UnitGenFlavorAnimation;
+
+export function updatetier1UnitGenTexts() {
+    if(save.generation.tier1UnitGenerators < constants.MAX_TIER_1_UNIT_GENS) {
+        buytier1UnitGenButton.prop("disabled", !(save.currencies.units >= currentTier1UnitGenPrice));
+        buytier1UnitGenButton.text(`Buy (${formatNumberString(currentTier1UnitGenPrice)}u)`);
+        tier1UnitGenDescriptionText.text(`Increases idle production to ${formatNumberString(save.generation.tier1UnitGeneratorPower == 0 ? 1000 : save.generation.tier1UnitGeneratorPower * 2)}u/s`);
+    } else {
+        buytier1UnitGenButton.prop("disabled", true);
+        buytier1UnitGenButton.text(`Maxed!`);
+        tier1UnitGenDescriptionText.text(`Tier 1 idle production is maxed at ${formatNumberString(save.generation.tier1UnitGeneratorPower)}u/s.`);
+    }
+
+    tier1UnitGenCountText.text(`${save.generation.tier1UnitGenerators}/${constants.MAX_TIER_1_UNIT_GENS}`);
+}
+
+function updatetier1UnitGenPrice() {
+    if(doDevPrices) {
+        currentTier1UnitGenPrice = devPriceScale[save.generation.tier1UnitGenerators];
+    } else {
+        currentTier1UnitGenPrice = tier1UnitGenPrices[save.generation.tier1UnitGenerators];
+    }
+}
+
+/* Outer settings code */
+// Number format
+export function formatNumberString(numberToFormat) {
+    var formatted;
+
+    switch(save.settings.numberFormat) {
+        case constants.COMMAS_NUMBER_FORMAT:
+            formatted = numberToFormat.toLocaleString();
+            break;
+        case constants.PERIOD_NUMBER_FORMAT:
+            formatted = numberToFormat.toLocaleString("de-DE");
+            break;
+        case constants.SCIENTIFIC_NUMBER_FORMAT:
+            if(numberToFormat >= 1000) {
+                formatted = (numberToFormat.toExponential(2)).replace("+", "");
+            } else {
+                formatted = numberToFormat.toLocaleString();
+            }
+            break;
+        default:
+            formatted = numberToFormat.toLocaleString();
+            break;
+    }
+
+    return formatted;
+}
+
+// Window onload
+$(function() {
     // Attempt to load save data
-    saveCookie = getCookie("save");
+    var saveCookie = getCookie("save");
 
     if(saveCookie == "") {
         save = starterSave;
@@ -76,11 +217,11 @@ $(function() {
         save = JSON.parse(saveCookie);
         
         // Update old save files
-        if(save.version == undefined || save.version < SAVEFILE_VERSION) {
+        if(save.version == undefined || save.version < constants.SAVEFILE_VERSION) {
             fixSaveFiles(save);
 
             // Save is up to date
-            save.version = SAVEFILE_VERSION;
+            save.version = constants.SAVEFILE_VERSION;
 
             customConsoleLog('Hello, world!');
         }
@@ -92,12 +233,14 @@ $(function() {
 
         // Goto last open page
         switchToPage(save.lastOpenPage, 0);
+
+        startTicks();
     }
 
     function calculateOfflineGain() {
         var now = new Date();
         var difference = (now.getTime() - new Date(save.lastSaved).getTime()) / 1000;
-        var offlineGains = Math.floor((difference * save.generation.unitsPerSecond) * OP_PLS_NERF);
+        var offlineGains = Math.floor((difference * save.generation.unitsPerSecond) * constants.OP_PLS_NERF);
 
         var offlineGainsText = $("#offlineGainsText");
 
@@ -120,7 +263,7 @@ $(function() {
     }
 
     function fixSaveFiles(saveData) {
-        if(saveData.version === undefined || saveData.version < SAVEFILE_VERSION) {
+        if(saveData.version === undefined || saveData.version < constants.SAVEFILE_VERSION) {
             // Fix if save was from before currencies were separate JSON object
             if(save.currencies == undefined) {
                 save.currencies = {
@@ -144,7 +287,7 @@ $(function() {
 
             // Set last open page to home
             if(save.lastOpenPage == undefined) {
-                save.lastOpenPage = HOME;
+                save.lastOpenPage = constants.HOME;
             }
 
             // Set save date
@@ -189,12 +332,12 @@ $(function() {
 
             // Version < 9 - IC-1
             if(save.settings.numberFormat == undefined) {
-                save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
+                save.settings.numberFormat = constants.COMMAS_NUMBER_FORMAT;
             }
 
             // Version < 10 - IC-9
             if(save.settings.numberFormat == "full") {
-                save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
+                save.settings.numberFormat = constants.COMMAS_NUMBER_FORMAT;
             }
 
             // Version < 11 - IC-15
@@ -255,8 +398,8 @@ $(function() {
     // Autosave every 15 seconds - save to cookies
     // Set interval to 15 seconds (15000 milliseconds)
     if(save.settings.autoSaveInterval === undefined || 
-        save.settings.autoSaveInterval < MIN_AUTOSAVE_INTERVAL || 
-        save.settings.autoSaveInterval > MAX_AUTOSAVE_INTERVAL) {
+        save.settings.autoSaveInterval < constants.MIN_AUTOSAVE_INTERVAL || 
+        save.settings.autoSaveInterval > constants.MAX_AUTOSAVE_INTERVAL) {
         save.settings.autoSaveInterval = 15000;
     }
 
@@ -274,7 +417,7 @@ $(function() {
         
         save.lastSaved = new Date();
         save.lastOpenPage = currentPage;
-        save.version = SAVEFILE_VERSION;
+        save.version = constants.SAVEFILE_VERSION;
 
         save.currencies.units = Math.floor(save.currencies.units);
 
@@ -310,17 +453,17 @@ $(function() {
     // Navbar code
     homeLink.on("click", function() {
         // Remove active class from all li in nav
-        switchToPage(HOME);
+        switchToPage(constants.HOME);
         $(this).parent().addClass("active");
     });
 
     shopLink.on("click", function() {
-        switchToPage(SHOP);
+        switchToPage(constants.SHOP);
         $(this).parent().addClass("active");
     });
 
     settingsLink.on("click", function() {
-        switchToPage(SETTINGS);
+        switchToPage(constants.SETTINGS);
         $(this).parent().addClass("active");
     });
 
@@ -339,7 +482,7 @@ $(function() {
 
                 // Hide the current page
                 switch(currentPage) {
-                    case HOME:
+                    case constants.HOME:
                         homeDiv.slideToggle({
                             complete: function() {
                                 doTheShow(animLength);
@@ -347,7 +490,7 @@ $(function() {
                             duration: animLength
                         });
                         break;
-                    case SHOP:
+                    case constants.SHOP:
                         shopDiv.slideToggle({
                             complete: function() {
                                 doTheShow(animLength);
@@ -355,7 +498,7 @@ $(function() {
                             duration: animLength
                         });
                         break;
-                    case SETTINGS:
+                    case constants.SETTINGS:
                         settingsDiv.slideToggle({
                             complete: function() {
                                 doTheShow(animLength);
@@ -372,20 +515,20 @@ $(function() {
 
                     // Show the target page
                     switch(target) {
-                        case HOME:
+                        case constants.HOME:
                             customConsoleLog('Switching to Home page.');
                             homeDiv.parent
                             homeDiv.slideToggle({
                                 duration: animLength
                             });
                             break;
-                        case SHOP:
+                        case constants.SHOP:
                             customConsoleLog('Switching to Shop page.');
                             shopDiv.slideToggle({
                                 duration: animLength
                             });
                             break;
-                        case SETTINGS:
+                        case constants.SETTINGS:
                             customConsoleLog('Switching to Settings page.');
                             settingsDiv.slideToggle({
                                 duration: animLength
@@ -397,8 +540,8 @@ $(function() {
                             homeDiv.slideDown({
                                 duration: 0
                             });
-                            target = HOME;
-                            save.lastOpenPage = HOME;
+                            target = constants.HOME;
+                            save.lastOpenPage = constants.HOME;
                             break;
                     }
     
@@ -471,24 +614,24 @@ $(function() {
         var chosen = $(this).val();
         
         switch(chosen) {
-            case COMMAS_NUMBER_FORMAT:
-                save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
+            case constants.COMMAS_NUMBER_FORMAT:
+                save.settings.numberFormat = constants.COMMAS_NUMBER_FORMAT;
                 break;
-            case PERIOD_NUMBER_FORMAT:
-                save.settings.numberFormat = PERIOD_NUMBER_FORMAT;
+            case constants.PERIOD_NUMBER_FORMAT:
+                save.settings.numberFormat = constants.PERIOD_NUMBER_FORMAT;
                 break;
-            case SCIENTIFIC_NUMBER_FORMAT:
-                save.settings.numberFormat = SCIENTIFIC_NUMBER_FORMAT;
+            case constants.SCIENTIFIC_NUMBER_FORMAT:
+                save.settings.numberFormat = constants.SCIENTIFIC_NUMBER_FORMAT;
                 break;
             default:
-                save.settings.numberFormat = COMMAS_NUMBER_FORMAT;
+                save.settings.numberFormat = constants.COMMAS_NUMBER_FORMAT;
                 break;
         }
 
         customConsoleLog(`Number format changed to ${save.settings.numberFormat}.`);
 
         // Update all shop texts
-        if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
+        if(save.generation.firstClickDoublers < constants.MAX_FIRST_CLICK_DOUBLER) {
             updateFirstClickDoublerTexts();
         }
         
@@ -496,31 +639,6 @@ $(function() {
 
         saveGameData();
     });
-
-    function formatNumberString(numberToFormat) {
-        var formatted;
-
-        switch(save.settings.numberFormat) {
-            case COMMAS_NUMBER_FORMAT:
-                formatted = numberToFormat.toLocaleString();
-                break;
-            case PERIOD_NUMBER_FORMAT:
-                formatted = numberToFormat.toLocaleString("de-DE");
-                break;
-            case SCIENTIFIC_NUMBER_FORMAT:
-                if(numberToFormat >= 1000) {
-                    formatted = (numberToFormat.toExponential(2)).replace("+", "");
-                } else {
-                    formatted = numberToFormat.toLocaleString();
-                }
-                break;
-            default:
-                formatted = numberToFormat.toLocaleString();
-                break;
-        }
-
-        return formatted;
-    }
 
     // Autosave Enabled
     var settingAutosaveEnabled = $("#settingAutosaveEnabled");
@@ -651,7 +769,7 @@ $(function() {
     var settingOfflineProgressionEnabledFlavorText = $("#settingOfflineProgressionEnabledFlavorText");
     var settingOfflineProgressionDesc = $("#settingOfflineProgressionDesc");
     
-    settingOfflineProgressionDesc.text(`Get ${OP_PLS_NERF * 100}% of your online earnings while offline`);
+    settingOfflineProgressionDesc.text(`Get ${constants.OP_PLS_NERF * 100}% of your online earnings while offline`);
 
     settingOfflineProgressionEnabled.prop("checked", save.settings.OPEnabled);
     
@@ -726,19 +844,7 @@ $(function() {
     });
 
     /* Shop code */
-    var doDevPrices = false;
-    var devPriceScale = {
-        0: 0,
-        1: 1,
-        2: 2,
-        3: 3,
-        4: 4,
-        5: 5,
-        6: 6,
-        7: 7,
-        8: 8,
-        9: 9
-    }
+    
 
     if(doDevPrices) {
         $("body").css({
@@ -747,29 +853,8 @@ $(function() {
     }
 
     // First Click Doubler
-    var buyClickUpgradeButton = $("#buyClickUpgradeButton");
-    var firstClickDoublerFlavorText = $("#clickUpgradeIncreaseFlavorText");
-    var firstClickDoublersCountText = $("#firstClickDoublersCount");
-    var firstClickDoublerPrices = {
-        0: 450,
-        1: 1800,
-        2: 5400,
-        3: 14400,
-        4: 36000,
-        5: 86400,
-        6: 201600,
-        7: 460800,
-        8: 1036800,
-        9: 2304000
-    }
-
-    var currentFirstClickDoublerPrice;
-
     updateFirstClickDoublerPrice();
     updateFirstClickDoublerTexts();
-
-    var firstClickDoublerAnimLock = false;
-    var firstClickDoublerFlavorAnimation;
 
     buyClickUpgradeButton.on("click", function() {
         // Check if user can afford
@@ -814,52 +899,9 @@ $(function() {
         }
     });
 
-    function updateFirstClickDoublerTexts() {
-        if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
-            buyClickUpgradeButton.prop("disabled", !(save.currencies.units >= currentFirstClickDoublerPrice));
-            buyClickUpgradeButton.text(`Buy (${formatNumberString(currentFirstClickDoublerPrice)}u)`);
-        } else {
-            buyClickUpgradeButton.prop("disabled", true);
-            buyClickUpgradeButton.text(`Maxed!`);
-        }
-
-        firstClickDoublersCountText.text(`${save.generation.firstClickDoublers}/${MAX_FIRST_CLICK_DOUBLER}`);
-    }
-
-    function updateFirstClickDoublerPrice() {
-        if(doDevPrices) {
-            currentFirstClickDoublerPrice = devPriceScale[save.generation.firstClickDoublers];
-        } else {
-            currentFirstClickDoublerPrice = firstClickDoublerPrices[save.generation.firstClickDoublers];
-        }
-    }
-
     // Tier 1 Main Generator
-    var buytier1UnitGenButton = $("#buyTier1UnitGenButton");
-    var tier1UnitGenCountText = $("#tier1UnitGenCountText");
-    var tier1UnitGenDescriptionText = $("#tier1UnitGenDescriptionText");
-    var tier1UnitGenIncreaseFlavorText = $("#tier1UnitGenIncreaseFlavorText");
-
-    var tier1UnitGenPrices = {
-        0: 57600,
-        1: 175200,
-        2: 352800,
-        3: 710400,
-        4: 1488000,
-        5: 3225600,
-        6: 7123200,
-        7: 15820800,
-        8: 35078400,
-        9: 77376000 
-    }
-
-    var currentTier1UnitGenPrice;
-
     updatetier1UnitGenPrice();
     updatetier1UnitGenTexts();
-
-    var tier1UnitGenAnimLock = false;
-    var tier1UnitGenFlavorAnimation;
 
     buytier1UnitGenButton.on("click", function() {
         // Check if user can afford
@@ -902,75 +944,6 @@ $(function() {
         }
     });
 
-    function updatetier1UnitGenTexts() {
-        if(save.generation.tier1UnitGenerators < MAX_TIER_1_UNIT_GENS) {
-            buytier1UnitGenButton.prop("disabled", !(save.currencies.units >= currentTier1UnitGenPrice));
-            buytier1UnitGenButton.text(`Buy (${formatNumberString(currentTier1UnitGenPrice)}u)`);
-            tier1UnitGenDescriptionText.text(`Increases idle production to ${formatNumberString(save.generation.tier1UnitGeneratorPower == 0 ? 1000 : save.generation.tier1UnitGeneratorPower * 2)}u/s`);
-        } else {
-            buytier1UnitGenButton.prop("disabled", true);
-            buytier1UnitGenButton.text(`Maxed!`);
-            tier1UnitGenDescriptionText.text(`Tier 1 idle production is maxed at ${formatNumberString(save.generation.tier1UnitGeneratorPower)}u/s.`);
-        }
-
-        tier1UnitGenCountText.text(`${save.generation.tier1UnitGenerators}/${MAX_TIER_1_UNIT_GENS}`);
-    }
-
-    function updatetier1UnitGenPrice() {
-        if(doDevPrices) {
-            currentTier1UnitGenPrice = devPriceScale[save.generation.tier1UnitGenerators];
-        } else {
-            currentTier1UnitGenPrice = tier1UnitGenPrices[save.generation.tier1UnitGenerators];
-        }
-    }
-
-    /* DO TICKS N SHIT */
-    tickInterval = setInterval(() => {
-        doTick();
-    }, save.settings.tickRate);
-
-    function doTick() {
-        // Calculate idle gain
-        if(save.generation.unitsPerSecond > 0) {
-            var gain = calculateIdleGain();
-            save.currencies.units += gain;
-
-            // Update currency text
-            updateCurrencyText();
-        }
-
-        // Update shop buttons if page is open
-        if(currentPage == SHOP) {
-            // If unbought first click doublers
-            if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
-                updateFirstClickDoublerTexts();
-            }
-            
-            // If unbought Tier 1 Main Generators
-            if(save.generation.tier1UnitGenerators < MAX_TIER_1_UNIT_GENS) {
-                updatetier1UnitGenTexts();
-            }
-        }
-    }
-
-    function resetTickInterval() {
-        clearInterval(tickInterval);
-
-        tickInterval = setInterval(() => {
-            doTick();
-        }, save.settings.tickRate);
-    }
-
-    function updateUnitsPerSecond() {
-        save.generation.unitsPerSecond = save.generation.tier1UnitGeneratorPower; // add future generator powers to this
-    }
-
-    function calculateIdleGain() {
-        var gainPerMillisecond = save.generation.unitsPerSecond / 1000;
-        var gainPerTick = gainPerMillisecond * save.settings.tickRate;
-        return gainPerTick;
-    }
-
     /* Main Currency Button Code */
     var btnClickMe = $("#btnClickMe");
     var unitButtonDescription = $("#unitButtonDescription");
@@ -987,8 +960,5 @@ $(function() {
         save.currencies.units += save.generation.clickPower * save.generation.baseProdMult;
         updateCurrencyText();
     }
+});
 
-    function updateCurrencyText() {
-        navUnitsText.text(`${formatNumberString(Math.floor(save.currencies.units))}${UNITS_ABBR}${(save.generation.unitsPerSecond > 0 ? `+(${formatNumberString(save.generation.unitsPerSecond)}u/s)` : "")}+(${formatNumberString(save.generation.clickPower)}u/c)`);
-    }
-})
