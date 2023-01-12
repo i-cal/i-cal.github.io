@@ -1,177 +1,193 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <!-- Grab Bootstrap and jQuery -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-        <title>i_Click</title>        
-        <link rel="stylesheet" href="css/index.css" />
-        <script src="js/index.js" type="module" defer></script>
-    </head>
-    <body>
-        <!-- Front end devs that see this... i am so sorry -->
-        <nav class="sticky-top p-0 m-0">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="#">i_Click</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item active">
-                            <a class="nav-link" href="#" id="homeLink">Home <span class="sr-only">(current)</span></a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" id="shopLink">Shop</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" id="settingsLink">Settings</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="https://iclick.youtrack.cloud/agiles/141-2/current" target="_blank">Dev To-Do</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="https://github.com/i-cal/i-cal.github.io" target="_blank">Source</a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-            <nav class="navbar navbar-light bg-light">
-                <span id="navUnitsText">0</span>
-                <span id="offlineGainsText" style="display:none;"></span>
-            </nav>
+
+<head>
+    <!-- Grab Bootstrap and jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+    <title>i_Click</title>
+    <link rel="stylesheet" href="css/index.css" />
+    <script src="dist/main.js" defer></script>
+</head>
+
+<body>
+    <!-- Front end devs that see this... i am so sorry -->
+    <nav class="sticky-top p-0 m-0">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">i_Click</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#" id="homeLink">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="shopLink">Shop</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="settingsLink">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://iclick.youtrack.cloud/agiles/141-2/current"
+                            target="_blank">Dev To-Do</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/i-cal/i-cal.github.io" target="_blank">Source</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/i-cal/i-cal.github.io/wiki"
+                            target="_blank">Wiki</a>
+                    </li>
+                </ul>
+            </div>
         </nav>
-        <!-- Main (Home) Div -->
-        <div id="mainDiv">
-            <p>This button will generate <span id="unitButtonDescription">1 unit</span> every time it is clicked.<br>Try clicking once, and then holding the enter button down to reach max efficiency.</p>
-            <button id="btnClickMe">Click me!</button>
+        <nav class="navbar navbar-light bg-light">
+            <span id="navUnitsText">0</span>
+            <span id="offlineGainsText" style="display:none;"></span>
+        </nav>
+    </nav>
+    <!-- Main (Home) Div -->
+    <div id="mainDiv">
+        <p>This button will generate <span id="unitButtonDescription">1 unit</span> every time it is clicked.<br>Try
+            clicking once, and then holding the enter button down to reach max efficiency.</p>
+        <button id="btnClickMe">Click me!</button>
+    </div>
+    <!-- Shop Div -->
+    <div id="shopDiv" style="display:none;">
+        <div style="margin:auto; display:block; width:50%; text-align: center;">
+            <h1>Welcome to the shop!</h1>
+            <small>Now with things to shop for!</small>
         </div>
-        <!-- Shop Div -->
-        <div id="shopDiv" style="display:none;">
-            <div style="margin:auto; display:block; width:50%; text-align: center;">
-                <h1>Welcome to the shop!</h1>
-                <small>Now with things to shop for!</small>
-            </div>
-            <div class="container" style="padding-top:30px;">
-                <div class="row">
-                    <div class="col-5 px-15 shopBox">
-                        <h3>Click Upgrades</h3>
-                        <div class="shopItem clickUpgradeDiv">
-                            <div style="display:block;">
-                                <label for="buyClickUpgradeButton">Upgrade your clicking power by x2!</label>
-                                <small id="firstClickDoublersCount">0/10</small>
-                            </div>
-                            <div>
-                                <button id="buyClickUpgradeButton">Buy</button>
-                                <small id="clickUpgradeIncreaseFlavorText" style="display:none;"></small>
-                            </div>
+        <div class="container" style="padding-top:30px;">
+            <div class="row">
+                <div class="col-5 px-15 shopBox">
+                    <h3>Click Upgrades</h3>
+                    <div class="shopItem clickUpgradeDiv">
+                        <div style="display:block;">
+                            <label for="buyClickUpgradeButton">Upgrade your clicking power by x2!</label>
+                            <small id="firstClickDoublersCount">0/10</small>
                         </div>
-                    </div>
-                    <div class="col-2"></div>
-                    <div class="col-5 px-15 shopBox">
-                        <h3>Idle Generation</h3>
-                        <div class="shopItem tier1UnitGenDiv">
-                            <div style="display:block;">
-                                <label for="buyTier1UnitGenButton">Tier 1 Unit Generator</label>
-                                <small id="tier1UnitGenCountText">0/10</small>
-                            </div>
-                            <div>
-                                <small id="tier1UnitGenDescriptionText">Increases idle production by 1000u/s</small>
-                            </div>
-                            <div>
-                                <button id="buyTier1UnitGenButton">Buy</button>
-                                <small id="tier1UnitGenIncreaseFlavorText" style="display:none;"></small>
-                            </div>
+                        <div>
+                            <button id="buyClickUpgradeButton">Buy</button>
+                            <small id="clickUpgradeIncreaseFlavorText" style="display:none;"></small>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <!-- Settings  -->
-        <div id="settingsDiv" style="display:none;">
-            <h1>Settings</h1>
-            <div class="settingsBox">
-                <label for="settingsSaveButton">Manual Save</label>
-                <small class="autosaveDisabledFlavorText" style="color:red;">This is now the only way you can save the game.</small>
-                <div>
-                    <button id="settingsSaveButton">Save</button>
-                    <small id="settingsManualSaveFinished" style="display:none; color:green;">Saved!</small>
-                </div>
-            </div>
-            <div class="settingsBox">
-                <label for="settingsDarkModeToggle">Dark Mode</label>
-                <div>
-                    <input type="checkbox" id="settingsDarkModeToggle">
-                    <small id="settingsDarkModeFlavorText" style="display:none;"></small>
-                </div>
-            </div>
-            <div class="settingsBox">
-                <label for="settingsNumberFormat">Number Format</label>
-                <div>
-                    <select id="settingsNumberFormat">
-                        <option value="commas">Commas (1,000)</option>
-                        <option value="periods">Periods (1.000)</option>
-                        <option value="scientific">Scientific (1.00e3)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="settingsBox">
-                <label for="settingAutosaveEnabled">Autosave</label>
-                <small class="autosaveDisabledFlavorText" style="display:none;">Why would you do this to yourself???</small>
-                <div>
-                    <input type="checkbox" id="settingAutosaveEnabled">
-                </div>
-            </div>
-            <div id="settingAutosaveIntervalDiv" class="settingsBox">
-                <label for="settingAutosaveInterval">Autosave Interval</label>
-                <small>(could cause performance issues)</small>
-                <div>
-                    <input type="range" min="1" max="30" value="15" step="1" id="settingAutosaveInterval">
-                    <label for="settingAutosaveInterval" id="settingAutosaveIntervalCurrentValue"></label>
-                </div>
-            </div>
-            <div id="settingTickRateDiv" class="settingsBox">
-                <label for="settingCustomTickRateAllowed">Custom Tick Rate (ms)</label>
-                <small>(could help/hinder performance)</small>
-                <div>
-                    <input type="checkbox" id="settingCustomTickRateAllowed">
-                    <input type="number" min="16" max="1000" value="50" step="1" id="settingCustomTickRate" style="display:none;">
-                    <button id="saveNewCustomTickrateButton" style="display:none;">Save</button>
-                    <small id="settingCustomTickRateFlavorText" style="display:none;"></small>
-                </div>
-            </div>
-            <div id="settingOfflineProgressionDiv" class="settingsBox">
-                <label for="settingOfflineProgressionEnabled">Offline Progression</label>
-                <small id="settingOfflineProgressionDesc">Get 75% of your online earnings while offline</small>
-                <div>
-                    <input type="checkbox" id="settingOfflineProgressionEnabled">
-                    <small id="settingOfflineProgressionEnabledFlavorText" style="display:none;"></small>
-                </div>
-            </div>
-            <div class="settingsBox">
-                <label for="settingConsoleLogs">Console Logs</label>
-                <small>Enabling console logs could create a memory leak in long play sessions</small>
-                <div>
-                    <input type="checkbox" id="settingConsoleLogs">
-                    <small id="settingConsoleLogsFlavorText" style="display:none;"></small>
-                </div>
-            </div>
-            <div class="settingsBox">
-                <div id="settingsResetSaveInitialDiv">
-                    <label for="settingsResetSaveButton" style="color:red;">This will completely restart your entire save from 0. No coming back.</label>
-                    <div>
-                        <button id="settingsResetSaveButton" style="background-color:lightcoral;">Reset Save</button>
-                    </div>
-                </div>
-                <div id="settingsResetSaveConfirmDiv" style="display:none;">
-                    <label for="settingsResetConfirm" style="color:red; font-weight: bolder;">Are you sure?</label>
-                    <div>
-                        <button id="settingsResetNevermind" style="background-color:lightgreen;">Nevermind</button>
-                        <button id="settingsResetConfirm" style="background-color:red;">Reset Save</button>
+                <div class="col-2"></div>
+                <div class="col-5 px-15 shopBox">
+                    <h3>Idle Generation</h3>
+                    <div class="shopItem tier1UnitGenDiv">
+                        <div style="display:block;">
+                            <label for="buyTier1UnitGenButton">Tier 1 Unit Generator</label>
+                            <small id="tier1UnitGenCountText">0/10</small>
+                        </div>
+                        <div>
+                            <small id="tier1UnitGenDescriptionText">Increases idle production by 1000u/s</small>
+                        </div>
+                        <div>
+                            <button id="buyTier1UnitGenButton">Buy</button>
+                            <small id="tier1UnitGenIncreaseFlavorText" style="display:none;"></small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </body>
+    </div>
+    <!-- Settings  -->
+    <div id="settingsDiv" style="display:none;">
+        <h1>Settings</h1>
+        <div class="settingsBox">
+            <label for="settingsSaveButton">Manual Save</label>
+            <small class="autosaveDisabledFlavorText" style="color:red;">This is now the only way you can save the
+                game.</small>
+            <div>
+                <button id="settingsSaveButton">Save</button>
+                <small id="settingsManualSaveFinished" style="display:none; color:green;">Saved!</small>
+            </div>
+        </div>
+        <div class="settingsBox">
+            <label for="settingsDarkModeToggle">Dark Mode</label>
+            <div>
+                <input type="checkbox" id="settingsDarkModeToggle">
+                <small id="settingsDarkModeFlavorText" style="display:none;"></small>
+            </div>
+        </div>
+        <div class="settingsBox">
+            <label for="settingsNumberFormat">Number Format</label>
+            <div>
+                <select id="settingsNumberFormat">
+                    <option value="commas">Commas (1,000)</option>
+                    <option value="periods">Periods (1.000)</option>
+                    <option value="scientific">Scientific (1.00e3)</option>
+                </select>
+            </div>
+        </div>
+        <div class="settingsBox">
+            <label for="settingAutosaveEnabled">Autosave</label>
+            <small class="autosaveDisabledFlavorText" style="display:none;">Why would you do this to yourself???</small>
+            <div>
+                <input type="checkbox" id="settingAutosaveEnabled">
+            </div>
+        </div>
+        <div id="settingAutosaveIntervalDiv" class="settingsBox">
+            <label for="settingAutosaveInterval">Autosave Interval</label>
+            <small>(could cause performance issues)</small>
+            <div>
+                <input type="range" min="1" max="30" value="15" step="1" id="settingAutosaveInterval">
+                <label for="settingAutosaveInterval" id="settingAutosaveIntervalCurrentValue"></label>
+            </div>
+        </div>
+        <div id="settingTickRateDiv" class="settingsBox">
+            <label for="settingCustomTickRateAllowed">Custom Tick Rate (ms)</label>
+            <small>(could help/hinder performance)</small>
+            <div>
+                <input type="checkbox" id="settingCustomTickRateAllowed">
+                <input type="number" min="16" max="1000" value="50" step="1" id="settingCustomTickRate"
+                    style="display:none;">
+                <button id="saveNewCustomTickrateButton" style="display:none;">Save</button>
+                <small id="settingCustomTickRateFlavorText" style="display:none;"></small>
+            </div>
+        </div>
+        <div id="settingOfflineProgressionDiv" class="settingsBox">
+            <label for="settingOfflineProgressionEnabled">Offline Progression</label>
+            <small id="settingOfflineProgressionDesc">Get 75% of your online earnings while offline</small>
+            <div>
+                <input type="checkbox" id="settingOfflineProgressionEnabled">
+                <small id="settingOfflineProgressionEnabledFlavorText" style="display:none;"></small>
+            </div>
+        </div>
+        <div class="settingsBox">
+            <label for="settingConsoleLogs">Console Logs</label>
+            <small>(could create a memory leak in long play sessions)</small>
+            <div>
+                <input type="checkbox" id="settingConsoleLogs">
+                <small id="settingConsoleLogsFlavorText" style="display:none;"></small>
+            </div>
+        </div>
+        <div class="settingsBox">
+            <div id="settingsResetSaveInitialDiv">
+                <label for="settingsResetSaveButton" style="color:red;">This will completely restart your entire save
+                    from 0. No coming back.</label>
+                <div>
+                    <button id="settingsResetSaveButton" style="background-color:lightcoral;">Reset Save</button>
+                </div>
+            </div>
+            <div id="settingsResetSaveConfirmDiv" style="display:none;">
+                <label for="settingsResetConfirm" style="color:red; font-weight: bolder;">Are you sure?</label>
+                <div>
+                    <button id="settingsResetNevermind" style="background-color:lightgreen;">Nevermind</button>
+                    <button id="settingsResetConfirm" style="background-color:red;">Reset Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
 </html>
