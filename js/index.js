@@ -1,15 +1,13 @@
 var save;
 
 $(function() {
-    console.log('Hello, world!');
-
     // Important constants/variables
     const UNITS_ABBR = "u";
     const MIN_AUTOSAVE_INTERVAL = 1000;
     const MAX_AUTOSAVE_INTERVAL = 30000;
     const DEF_AUTOSAVE_INTERVAL = 15000;
     const OP_PLS_NERF = 0.75;
-    const SAVEFILE_VERSION = 12;
+    const SAVEFILE_VERSION = 13;
 
     const HOME = "home";
     const SHOP = "shop";
@@ -63,7 +61,8 @@ $(function() {
             autoSaveInterval: DEF_AUTOSAVE_INTERVAL,
             tickRate: 50,
             customTickRateAllowed: false,
-            OPEnabled: false
+            OPEnabled: false,
+            consoleLogsEnabled: false
         },
         version: SAVEFILE_VERSION
     };
@@ -82,6 +81,8 @@ $(function() {
 
             // Save is up to date
             save.version = SAVEFILE_VERSION;
+
+            customConsoleLog('Hello, world!');
         }
 
         // Offline progression (75% of estimated online, based off of units per second)
@@ -239,6 +240,11 @@ $(function() {
 
                 delete save.generation.thirdMainGenerators;
             }
+
+            // Version < 13 - IC-19
+            if(save.settings.consoleLogsEnabled == undefined) {
+                save.settings.consoleLogsEnabled = false;
+            }
         }
     }
 
@@ -263,7 +269,7 @@ $(function() {
 
     function saveGameData(isAutoSave) {
         if(isAutoSave === true) {
-            console.log("Autosaving...");
+            customConsoleLog("Autosaving...");
         }
         
         save.lastSaved = new Date();
@@ -274,8 +280,8 @@ $(function() {
 
         setCookie("save", JSON.stringify(save), 1);
         
-        console.log("Save finished. Data:");
-        console.log(save);
+        customConsoleLog("Save finished. Data:");
+        customConsoleLog(save);
     }
 
     function setCookie(name, value, expiration) {
@@ -367,26 +373,26 @@ $(function() {
                     // Show the target page
                     switch(target) {
                         case HOME:
-                            console.log('Switching to Home page.');
+                            customConsoleLog('Switching to Home page.');
                             homeDiv.parent
                             homeDiv.slideToggle({
                                 duration: animLength
                             });
                             break;
                         case SHOP:
-                            console.log('Switching to Shop page.');
+                            customConsoleLog('Switching to Shop page.');
                             shopDiv.slideToggle({
                                 duration: animLength
                             });
                             break;
                         case SETTINGS:
-                            console.log('Switching to Settings page.');
+                            customConsoleLog('Switching to Settings page.');
                             settingsDiv.slideToggle({
                                 duration: animLength
                             });
                             break;
                         default:
-                            console.log('Switching to Home page.');
+                            customConsoleLog('Switching to Home page.');
                             homeDiv.parent
                             homeDiv.slideDown({
                                 duration: 0
@@ -479,7 +485,7 @@ $(function() {
                 break;
         }
 
-        console.log(`Number format changed to ${save.settings.numberFormat}.`);
+        customConsoleLog(`Number format changed to ${save.settings.numberFormat}.`);
 
         // Update all shop texts
         if(save.generation.firstClickDoublers < MAX_FIRST_CLICK_DOUBLER) {
@@ -530,7 +536,7 @@ $(function() {
     }
 
     settingAutosaveEnabled.on("click", function() {
-        console.log("Autosave enabled: " + settingAutosaveEnabled.prop("checked"));
+        customConsoleLog("Autosave enabled: " + settingAutosaveEnabled.prop("checked"));
         save.settings.autoSaveEnabled = settingAutosaveEnabled.prop("checked");
         settingAutosaveInterval.prop("disabled", !save.settings.autoSaveEnabled);
         settingAutosaveIntervalDiv.slideToggle();
@@ -576,7 +582,7 @@ $(function() {
             saveGameData(true);
         }, save.settings.autoSaveInterval);
 
-        console.log("Autosave interval has been changed to: " + value + " second" + (value != 1 ? "s" : ""));
+        customConsoleLog("Autosave interval has been changed to: " + value + " second" + (value != 1 ? "s" : ""));
     });
 
     // Custom tick rate
@@ -610,9 +616,9 @@ $(function() {
             save.settings.tickRate = 50;
             settingCustomTickRate.val(save.settings.tickRate);
             resetTickInterval();
-            console.log("Custom tick rate disabled.");
+            customConsoleLog("Custom tick rate disabled.");
         } else {
-            console.log("Custom tick rate enabled.");
+            customConsoleLog("Custom tick rate enabled.");
         }
 
         saveGameData();
@@ -635,7 +641,7 @@ $(function() {
 
         resetTickInterval();
 
-        console.log(`Tick rate has been changed to ${newTickRate}ms.`);
+        customConsoleLog(`Tick rate has been changed to ${newTickRate}ms.`);
 
         saveGameData();
     });
@@ -666,6 +672,36 @@ $(function() {
 
         saveGameData();
     });
+
+    // Console Logs
+    var settingConsoleLogs = $("#settingConsoleLogs");
+    var settingConsoleLogsFlavorText = $("#settingConsoleLogsFlavorText");
+
+    settingConsoleLogs.prop("checked", save.settings.consoleLogsEnabled);
+
+    settingConsoleLogs.on("click", function() {
+        save.settings.consoleLogsEnabled = $(this).prop("checked");
+        
+        if(save.settings.consoleLogsEnabled) {
+            settingConsoleLogsFlavorText.text("Console logs enabled!");
+            settingConsoleLogsFlavorText.slideToggle();
+
+            var settingConsoleLogsFlavorTextAnim = setInterval(() => {
+                settingConsoleLogsFlavorText.slideToggle();
+                clearInterval(settingConsoleLogsFlavorTextAnim);
+            }, 3000);
+
+            customConsoleLog("Console logs enabled.");
+        }
+
+        saveGameData();
+    });
+
+    function customConsoleLog(message) {
+        if(save.settings.consoleLogsEnabled) {
+            console.log(message);
+        }
+    }
 
     // Reset save code
     var settingsResetSaveInitialDiv = $("#settingsResetSaveInitialDiv");
