@@ -1,12 +1,10 @@
 // Imports
-import {constants} from "./index.js";
+// Variables from index
+import { constants, currentPage, save } from "./index.js";
+// Functions from index
+import { updateCurrencyText, updateFirstClickDoublerTexts, updatetier1UnitGenTexts } from "./index.js";
 
-import {save} from "./index.js";
-import { currentPage } from "./index.js";
-
-import {updateCurrencyText} from "./index.js";
-import {updateFirstClickDoublerTexts} from "./index.js";
-import {updatetier1UnitGenTexts} from "./index.js";
+import { customConsoleLog } from "./settings.js";
 
 var tickInterval;
 
@@ -19,7 +17,7 @@ export function startTicks() {
 
 function doTick() {
     // Calculate idle gain
-    if(save.generation.unitsPerSecond > 0) {
+    if (save.generation.unitsPerSecond > 0) {
         var gain = calculateIdleGain();
         save.currencies.units += gain;
 
@@ -28,14 +26,14 @@ function doTick() {
     }
 
     // Update shop buttons if page is open
-    if(currentPage == constants.SHOP) {
+    if (currentPage == constants.SHOP) {
         // If unbought first click doublers
-        if(save.generation.firstClickDoublers < constants.MAX_FIRST_CLICK_DOUBLER) {
+        if (save.generation.firstClickDoublers < constants.MAX_FIRST_CLICK_DOUBLER) {
             updateFirstClickDoublerTexts();
         }
-        
+
         // If unbought Tier 1 Main Generators
-        if(save.generation.tier1UnitGenerators < constants.MAX_TIER_1_UNIT_GENS) {
+        if (save.generation.tier1UnitGenerators < constants.MAX_TIER_1_UNIT_GENS) {
             updatetier1UnitGenTexts();
         }
     }

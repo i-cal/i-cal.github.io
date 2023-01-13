@@ -1,7 +1,8 @@
 // Imports
-import { resetTickInterval } from "./tick.js";
-import { updateUnitsPerSecond } from "./tick.js";
-import { startTicks } from "./tick.js";
+import { resetTickInterval, updateUnitsPerSecond, startTicks } from "./tick.js";
+
+import { customConsoleLog, initSettings, formatNumberString } from "./settings.js";
+import { setAutosave } from "./autosave.js";
 
 // Exports
 export const constants = {
@@ -10,7 +11,7 @@ export const constants = {
     MAX_AUTOSAVE_INTERVAL: 30000,
     DEF_AUTOSAVE_INTERVAL: 15000,
     OP_PLS_NERF: 0.75,
-    SAVEFILE_VERSION: 13,
+    SAVEFILE_VERSION: 14,
 
     HOME: "home",
     SHOP: "shop",
@@ -27,8 +28,6 @@ export var save;
 export var currentPage;
 
 // Variables
-var autosaveTimer;
-
 var pageSwitchLocked = false;
 
 currentPage = constants.HOME;
@@ -179,31 +178,44 @@ function updatetier1UnitGenPrice() {
     }
 }
 
-/* Outer settings code */
-// Number format
-export function formatNumberString(numberToFormat) {
-    var formatted;
-
-    switch (save.settings.numberFormat) {
-        case constants.COMMAS_NUMBER_FORMAT:
-            formatted = numberToFormat.toLocaleString();
-            break;
-        case constants.PERIOD_NUMBER_FORMAT:
-            formatted = numberToFormat.toLocaleString("de-DE");
-            break;
-        case constants.SCIENTIFIC_NUMBER_FORMAT:
-            if (numberToFormat >= 1000) {
-                formatted = (numberToFormat.toExponential(2)).replace("+", "");
-            } else {
-                formatted = numberToFormat.toLocaleString();
-            }
-            break;
-        default:
-            formatted = numberToFormat.toLocaleString();
-            break;
+export function saveGameData(isAutoSave) {
+    if (isAutoSave === true) {
+        customConsoleLog("Autosaving...");
     }
 
-    return formatted;
+    save.lastSaved = new Date();
+    save.lastOpenPage = currentPage;
+    save.version = constants.SAVEFILE_VERSION;
+
+    save.currencies.units = Math.floor(save.currencies.units);
+
+    setCookie("save", JSON.stringify(save), 365 * 5);
+
+    customConsoleLog("Save finished. Data:");
+    customConsoleLog(save);
+}
+
+export function setCookie(name, value, expiration) {
+    var date = new Date();
+    date.setTime(date.getTime() + expiration * 24 * 60 * 60 * 1000);
+    var expires = "expires=" + date.toUTCString();
+    document.cookie = name + "=" + value + ";" + expires + ";path=/";
+}
+
+function getCookie(name) {
+    var name = name + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
 
 // Window onload
@@ -217,7 +229,7 @@ $(function () {
         save = JSON.parse(saveCookie);
 
         // Update old save files
-        if (save.version == undefined || save.version < constants.SAVEFILE_VERSION) {
+        if (save.version == undefined || save.version != constants.SAVEFILE_VERSION) {
             fixSaveFiles(save);
 
             // Save is up to date
@@ -236,6 +248,7 @@ $(function () {
     }
 
     startTicks();
+    initSettings();
 
     function calculateOfflineGain() {
         var now = new Date();
@@ -263,132 +276,8 @@ $(function () {
     }
 
     function fixSaveFiles(saveData) {
-        if (saveData.version === undefined || saveData.version < constants.SAVEFILE_VERSION) {
-            // Fix if save was from before currencies were separate JSON object
-            if (save.currencies == undefined) {
-                save.currencies = {
-                    units: save.units
-                }
-
-                // Units were still called mainCurrency in the save file when this fix was relevant.
-                delete save.mainCurrency;
-            }
-
-            // Fix if save was from before settings were separate JSON object
-            if (save.settings == undefined) {
-                save.settings = {
-                    autoSaveEnabled: save.autoSaveEnabled,
-                    autoSaveInterval: save.autoSaveInterval
-                };
-
-                delete save.autoSaveEnabled;
-                delete save.autoSaveInterval;
-            }
-
-            // Set last open page to home
-            if (save.lastOpenPage == undefined) {
-                save.lastOpenPage = constants.HOME;
-            }
-
-            // Set save date
-            if (save.lastSaved == undefined) {
-                save.lastSaved = new Date();
-            }
-
-            // If before shop & generation update, generation attributes need to be added
-            if (save.generation == undefined) {
-                save.generation = starterSave.generation;
-            }
-
-            // Version < 3
-            if (save.settings.tickRate == undefined) {
-                save.settings.tickRate = 50;
-            }
-
-            // Version < 4
-            // if(save.generation.firstMainGeneratorPower == undefined) {
-            //     save.generation.firstMainGeneratorPower = 0;
-            // }
-
-            // Version < 5
-            if (save.settings.customTickRateAllowed == undefined) {
-                save.settings.customTickRateAllowed = false;
-            }
-
-            // Version < 6
-            if (save.settings.OPEnabled == undefined) {
-                save.settings.OPEnabled = false;
-            }
-
-            // Version < 7
-            if (save.settings.darkModeEnabled == undefined) {
-                save.settings.darkModeEnabled = false;
-            }
-
-            // Version < 8 - IC-7
-            if (save.lastOpenPage == "devtodo") {
-                save.lastOpenPage = "home";
-            }
-
-            // Version < 9 - IC-1
-            if (save.settings.numberFormat == undefined) {
-                save.settings.numberFormat = constants.COMMAS_NUMBER_FORMAT;
-            }
-
-            // Version < 10 - IC-9
-            if (save.settings.numberFormat == "full") {
-                save.settings.numberFormat = constants.COMMAS_NUMBER_FORMAT;
-            }
-
-            // Version < 11 - IC-15
-            if (save.currencies.units == undefined) {
-                save.currencies.units = save.currencies.mainCurrency;
-
-                delete save.currencies.mainCurrency;
-            }
-
-            // Version < 12 - IC-15
-            if (save.generation.unitsPerSecond == undefined) {
-                save.generation.unitsPerSecond = save.generation.mainPerSecond;
-
-                delete save.generation.mainPerSecond;
-            }
-
-            if (save.generation.baseProdMult == undefined) {
-                save.generation.baseProdMult = save.generation.mainProdMult;
-
-                delete save.generation.mainProdMult;
-            }
-
-            if (save.generation.tier1UnitGenerators == undefined) {
-                save.generation.tier1UnitGenerators = save.generation.firstMainGenerators;
-
-                delete save.generation.firstMainGenerators;
-            }
-
-            if (save.generation.tier1UnitGeneratorPower == undefined) {
-                save.generation.tier1UnitGeneratorPower = save.generation.firstMainGeneratorPower;
-
-                delete save.generation.firstMainGeneratorPower;
-            }
-
-            if (save.generation.tier2UnitGenerators == undefined) {
-                save.generation.tier2UnitGenerators = save.generation.secondMainGenerators;
-
-                delete save.generation.secondMainGenerators;
-            }
-
-            if (save.generation.tier3UnitGenerators == undefined) {
-                save.generation.tier3UnitGenerators = save.generation.thirdMainGenerators;
-
-                delete save.generation.thirdMainGenerators;
-            }
-
-            // Version < 13 - IC-19
-            if (save.settings.consoleLogsEnabled == undefined) {
-                save.settings.consoleLogsEnabled = false;
-            }
-        }
+        // fuck your save (for now)
+        save = starterSave;
     }
 
     // Restore settings from save data
@@ -404,50 +293,8 @@ $(function () {
     }
 
     if (save.settings.autoSaveEnabled) {
-        // Call the function every 15 seconds
-        autosaveTimer = setInterval(function () {
-            saveGameData(true);
-        }, save.settings.autoSaveInterval);
-    }
-
-    function saveGameData(isAutoSave) {
-        if (isAutoSave === true) {
-            customConsoleLog("Autosaving...");
-        }
-
-        save.lastSaved = new Date();
-        save.lastOpenPage = currentPage;
-        save.version = constants.SAVEFILE_VERSION;
-
-        save.currencies.units = Math.floor(save.currencies.units);
-
-        setCookie("save", JSON.stringify(save), 1);
-
-        customConsoleLog("Save finished. Data:");
-        customConsoleLog(save);
-    }
-
-    function setCookie(name, value, expiration) {
-        var date = new Date();
-        date.setTime(date.getTime() + expiration * 24 * 60 * 60 * 1000);
-        var expires = "expires=" + date.toUTCString();
-        document.cookie = name + "=" + value + ";" + expires + ";path=/";
-    }
-
-    function getCookie(name) {
-        var name = name + "=";
-        var decodedCookie = decodeURIComponent(document.cookie);
-        var ca = decodedCookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length);
-            }
-        }
-        return "";
+        // Turn on autosave
+        setAutosave();
     }
 
     // Navbar code
@@ -559,289 +406,6 @@ $(function () {
             }
         }
     }
-
-    /* Settings code */
-    // Manual Save
-    var settingsSaveButton = $("#settingsSaveButton");
-    var settingsManualSaveFinished = $("#settingsManualSaveFinished");
-    settingsSaveButton.on("click", function () {
-        saveGameData();
-        settingsSaveButton.slideToggle();
-        settingsManualSaveFinished.slideToggle();
-        settingsSaveButton.prop("disabled", true);
-        var anim = setInterval(() => {
-            settingsManualSaveFinished.slideToggle();
-            clearInterval(anim);
-            settingsSaveButton.prop("disabled", false);
-            settingsSaveButton.slideToggle();
-        }, 3000);
-    });
-
-    // Dark Mode
-    var settingsDarkModeToggle = $("#settingsDarkModeToggle");
-    var settingsDarkModeFlavorText = $("#settingsDarkModeFlavorText");
-
-    settingsDarkModeToggle.prop("checked", save.settings.darkModeEnabled);
-
-    if (save.settings.darkModeEnabled) {
-        $('body').toggleClass('dark-mode');
-        $('nav').toggleClass('bg-light navbar-light navbar-dark bg-dark');
-    }
-
-    settingsDarkModeToggle.on('click', function () {
-        $('body').toggleClass('dark-mode');
-        $('nav').toggleClass('bg-light navbar-light navbar-dark bg-dark');
-        save.settings.darkModeEnabled = settingsDarkModeToggle.prop("checked");
-        saveGameData();
-
-        if (!($(this).prop("checked"))) {
-            settingsDarkModeFlavorText.text("FLASHBANG OUT");
-            settingsDarkModeFlavorText.slideToggle();
-
-            var settingsDarkModeFlavorTextAnim = setInterval(() => {
-                settingsDarkModeFlavorText.slideToggle();
-                clearInterval(settingsDarkModeFlavorTextAnim);
-            }, 3000);
-        }
-    });
-
-    // Number Format
-    var settingsNumberFormat = $("#settingsNumberFormat");
-
-    settingsNumberFormat.val(save.settings.numberFormat);
-
-    settingsNumberFormat.on("change", function () {
-        var chosen = $(this).val();
-
-        switch (chosen) {
-            case constants.COMMAS_NUMBER_FORMAT:
-                save.settings.numberFormat = constants.COMMAS_NUMBER_FORMAT;
-                break;
-            case constants.PERIOD_NUMBER_FORMAT:
-                save.settings.numberFormat = constants.PERIOD_NUMBER_FORMAT;
-                break;
-            case constants.SCIENTIFIC_NUMBER_FORMAT:
-                save.settings.numberFormat = constants.SCIENTIFIC_NUMBER_FORMAT;
-                break;
-            default:
-                save.settings.numberFormat = constants.COMMAS_NUMBER_FORMAT;
-                break;
-        }
-
-        customConsoleLog(`Number format changed to ${save.settings.numberFormat}.`);
-
-        // Update all shop texts
-        if (save.generation.firstClickDoublers < constants.MAX_FIRST_CLICK_DOUBLER) {
-            updateFirstClickDoublerTexts();
-        }
-
-        updatetier1UnitGenTexts();
-
-        saveGameData();
-    });
-
-    // Autosave Enabled
-    var settingAutosaveEnabled = $("#settingAutosaveEnabled");
-    var autosaveDisabledFlavorText = $(".autosaveDisabledFlavorText");
-    var settingAutosaveIntervalDiv = $("#settingAutosaveIntervalDiv");
-
-    if (save.settings.autoSaveEnabled) {
-        autosaveDisabledFlavorText.hide();
-        settingAutosaveIntervalDiv.show();
-    } else {
-        autosaveDisabledFlavorText.show();
-        settingAutosaveIntervalDiv.hide();
-    }
-
-    settingAutosaveEnabled.on("click", function () {
-        customConsoleLog("Autosave enabled: " + settingAutosaveEnabled.prop("checked"));
-        save.settings.autoSaveEnabled = settingAutosaveEnabled.prop("checked");
-        settingAutosaveInterval.prop("disabled", !save.settings.autoSaveEnabled);
-        settingAutosaveIntervalDiv.slideToggle();
-
-        if (save.settings.autoSaveEnabled) {
-            autosaveTimer = setInterval(() => {
-                saveGameData();
-            }, save.settings.autoSaveInterval);
-
-            autosaveDisabledFlavorText.slideToggle();
-        } else {
-            clearInterval(autosaveTimer);
-            autosaveDisabledFlavorText.slideToggle();
-        }
-
-        saveGameData(); // To save the new setting
-    });
-
-    // Autosave Interval
-    var settingAutosaveInterval = $("#settingAutosaveInterval");
-    var settingAutosaveIntervalCurrentValue = $("#settingAutosaveIntervalCurrentValue");
-
-    settingAutosaveInterval.prop("disabled", !save.settings.autoSaveEnabled);
-    settingAutosaveInterval.val(save.settings.autoSaveInterval / 1000);
-    settingAutosaveIntervalCurrentValue.text((save.settings.autoSaveInterval / 1000) + " second" + (save.settings.autoSaveInterval / 1000 != 1 ? "s" : ""));
-
-    settingAutosaveInterval.on("input", function () {
-        var value = $(this).val();
-        settingAutosaveIntervalCurrentValue.text(value + " second" + (value != 1 ? "s" : ""));
-    });
-
-    settingAutosaveInterval.on("change", function () {
-        var value = $(this).val();
-
-        // Update save data
-        save.settings.autoSaveInterval = value * 1000;
-
-        // Clear old interval
-        clearInterval(autosaveTimer);
-
-        // Set new interval
-        autosaveTimer = setInterval(() => {
-            saveGameData(true);
-        }, save.settings.autoSaveInterval);
-
-        customConsoleLog("Autosave interval has been changed to: " + value + " second" + (value != 1 ? "s" : ""));
-    });
-
-    // Custom tick rate
-    var settingCustomTickRateAllowed = $("#settingCustomTickRateAllowed");
-    var settingCustomTickRate = $("#settingCustomTickRate");
-    var saveNewCustomTickrateButton = $("#saveNewCustomTickrateButton");
-    var settingCustomTickRateFlavorText = $("#settingCustomTickRateFlavorText");
-
-    settingCustomTickRateAllowed.prop("checked", save.settings.customTickRateAllowed);
-
-    if (save.settings.customTickRateAllowed) {
-        settingCustomTickRate.show();
-        saveNewCustomTickrateButton.show();
-    }
-
-    settingCustomTickRate.prop("disabled", !save.settings.customTickRateAllowed);
-    settingCustomTickRate.val(save.settings.tickRate);
-
-    saveNewCustomTickrateButton.prop("disabled", !save.settings.customTickRateAllowed);
-
-    settingCustomTickRateAllowed.on("click", function () {
-        settingCustomTickRate.prop("disabled", false);
-        settingCustomTickRate.slideToggle();
-
-        saveNewCustomTickrateButton.prop("disabled", false);
-        saveNewCustomTickrateButton.slideToggle();
-
-        save.settings.customTickRateAllowed = settingCustomTickRateAllowed.prop("checked");
-
-        if (save.settings.customTickRateAllowed == false) {
-            save.settings.tickRate = 50;
-            settingCustomTickRate.val(save.settings.tickRate);
-            resetTickInterval();
-            customConsoleLog("Custom tick rate disabled.");
-        } else {
-            customConsoleLog("Custom tick rate enabled.");
-        }
-
-        saveGameData();
-    });
-
-    saveNewCustomTickrateButton.on("click", function () {
-        var newTickRate = settingCustomTickRate.val();
-
-        settingCustomTickRateFlavorText.text("Tick rate updated.");
-        settingCustomTickRateFlavorText.slideToggle();
-        saveNewCustomTickrateButton.prop("disabled", true);
-
-        var anim = setInterval(() => {
-            settingCustomTickRateFlavorText.slideToggle();
-            saveNewCustomTickrateButton.prop("disabled", false);
-            clearInterval(anim);
-        }, 3000);
-
-        save.settings.tickRate = newTickRate;
-
-        resetTickInterval();
-
-        customConsoleLog(`Tick rate has been changed to ${newTickRate}ms.`);
-
-        saveGameData();
-    });
-
-    // Offline Progression
-    var settingOfflineProgressionEnabled = $("#settingOfflineProgressionEnabled");
-    var settingOfflineProgressionEnabledFlavorText = $("#settingOfflineProgressionEnabledFlavorText");
-    var settingOfflineProgressionDesc = $("#settingOfflineProgressionDesc");
-
-    settingOfflineProgressionDesc.text(`Get ${constants.OP_PLS_NERF * 100}% of your online earnings while offline`);
-
-    settingOfflineProgressionEnabled.prop("checked", save.settings.OPEnabled);
-
-    settingOfflineProgressionEnabled.on("click", function () {
-        var op = $(this).prop("checked");
-
-        if (op) {
-            settingOfflineProgressionEnabledFlavorText.text("hehe ;)");
-            settingOfflineProgressionEnabledFlavorText.slideToggle();
-
-            var offlineAnim = setInterval(() => {
-                settingOfflineProgressionEnabledFlavorText.slideToggle();
-                clearInterval(offlineAnim);
-            }, 3000);
-        }
-
-        save.settings.OPEnabled = op;
-
-        saveGameData();
-    });
-
-    // Console Logs
-    var settingConsoleLogs = $("#settingConsoleLogs");
-    var settingConsoleLogsFlavorText = $("#settingConsoleLogsFlavorText");
-
-    settingConsoleLogs.prop("checked", save.settings.consoleLogsEnabled);
-
-    settingConsoleLogs.on("click", function () {
-        save.settings.consoleLogsEnabled = $(this).prop("checked");
-
-        if (save.settings.consoleLogsEnabled) {
-            settingConsoleLogsFlavorText.text("Console logs enabled!");
-            settingConsoleLogsFlavorText.slideToggle();
-
-            var settingConsoleLogsFlavorTextAnim = setInterval(() => {
-                settingConsoleLogsFlavorText.slideToggle();
-                clearInterval(settingConsoleLogsFlavorTextAnim);
-            }, 3000);
-
-            customConsoleLog("Console logs enabled.");
-        }
-
-        saveGameData();
-    });
-
-    function customConsoleLog(message) {
-        if (save.settings.consoleLogsEnabled) {
-            console.log(message);
-        }
-    }
-
-    // Reset save code
-    var settingsResetSaveInitialDiv = $("#settingsResetSaveInitialDiv");
-    var settingsResetSaveButton = $("#settingsResetSaveButton");
-    var settingsResetSaveConfirmDiv = $("#settingsResetSaveConfirmDiv");
-    var settingsResetConfirm = $("#settingsResetConfirm");
-    var settingsResetNevermind = $("#settingsResetNevermind");
-
-    settingsResetSaveButton.on("click", function () {
-        settingsResetSaveInitialDiv.slideToggle();
-        settingsResetSaveConfirmDiv.slideToggle();
-    });
-
-    settingsResetNevermind.on("click", function () {
-        settingsResetSaveInitialDiv.slideToggle();
-        settingsResetSaveConfirmDiv.slideToggle();
-    });
-
-    settingsResetConfirm.on("click", function () {
-        setCookie("save", "", -1);
-        location.reload();
-    });
 
     /* Shop code */
 
