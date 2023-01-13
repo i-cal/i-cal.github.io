@@ -1,6 +1,7 @@
-import { save, constants, saveGameData, updatetier1UnitGenTexts, updateFirstClickDoublerTexts, setCookie } from "./index.js";
+import { save, constants, saveGameData, setCookie } from "./index.js";
 import { resetTickInterval } from "./tick.js";
 import { setAutosave, stopAutosave } from "./autosave.js";
+import { updatetier1UnitGenTexts, updateFirstClickDoublerTexts } from "./shop.js";
 
 export function customConsoleLog(message) {
     if (save.settings.consoleLogsEnabled) {
@@ -38,6 +39,7 @@ export function initSettings() {
     // Manual Save
     var settingsSaveButton = $("#settingsSaveButton");
     var settingsManualSaveFinished = $("#settingsManualSaveFinished");
+
     settingsSaveButton.on("click", function () {
         saveGameData();
         settingsSaveButton.slideToggle();
@@ -66,7 +68,10 @@ export function initSettings() {
         $('body').toggleClass('dark-mode');
         $('nav').toggleClass('bg-light navbar-light navbar-dark bg-dark');
         save.settings.darkModeEnabled = settingsDarkModeToggle.prop("checked");
-        saveGameData();
+
+        if (save.settings.autoSaveEnabled) {
+            saveGameData();
+        }
 
         if (!($(this).prop("checked"))) {
             settingsDarkModeFlavorText.text("FLASHBANG OUT");
@@ -111,7 +116,9 @@ export function initSettings() {
 
         updatetier1UnitGenTexts();
 
-        saveGameData();
+        if (save.settings.autoSaveEnabled) {
+            saveGameData();
+        }
     });
 
     // Autosave Enabled
@@ -208,7 +215,9 @@ export function initSettings() {
             customConsoleLog("Custom tick rate enabled.");
         }
 
-        saveGameData();
+        if (save.settings.autoSaveEnabled) {
+            saveGameData();
+        }
     });
 
     saveNewCustomTickrateButton.on("click", function () {
@@ -230,7 +239,9 @@ export function initSettings() {
 
         customConsoleLog(`Tick rate has been changed to ${newTickRate}ms.`);
 
-        saveGameData();
+        if (save.settings.autoSaveEnabled) {
+            saveGameData();
+        }
     });
 
     // Offline Progression
@@ -257,7 +268,9 @@ export function initSettings() {
 
         save.settings.OPEnabled = op;
 
-        saveGameData();
+        if (save.settings.autoSaveEnabled) {
+            saveGameData();
+        }
     });
 
     // Console Logs
@@ -281,7 +294,9 @@ export function initSettings() {
             customConsoleLog("Console logs enabled.");
         }
 
-        saveGameData();
+        if (save.settings.autoSaveEnabled) {
+            saveGameData();
+        }
     });
 
     // Reset save code

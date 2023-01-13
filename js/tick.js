@@ -1,10 +1,18 @@
 // Imports
+
+// Index
 // Variables from index
 import { constants, currentPage, save } from "./index.js";
 // Functions from index
-import { updateCurrencyText, updateFirstClickDoublerTexts, updatetier1UnitGenTexts } from "./index.js";
+import { updateCurrencyText } from "./index.js";
 
+// Settings
+// Functions from settings
 import { customConsoleLog } from "./settings.js";
+
+// Shop
+// Functions from shop
+import { updateFirstClickDoublerTexts, updatetier1UnitGenTexts } from "./shop.js";
 
 var tickInterval;
 
