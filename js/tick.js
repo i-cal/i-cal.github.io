@@ -12,7 +12,7 @@ import { customConsoleLog } from "./settings.js";
 
 // Shop
 // Functions from shop
-import { updateFirstClickDoublerTexts, updatetier1UnitGenTexts } from "./shop.js";
+import { updateFirstClickDoublerTexts, updatetier1UnitGenTexts, checkForAffordablePurchase } from "./shop.js";
 
 var tickInterval;
 
@@ -45,6 +45,9 @@ function doTick() {
             updatetier1UnitGenTexts();
         }
     }
+
+    // Check for available shop purchase
+    checkForAffordablePurchase();
 }
 
 export function resetTickInterval() {
