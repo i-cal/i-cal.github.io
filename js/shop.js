@@ -85,6 +85,22 @@ var currentTier1UnitGenPrice;
 var tier1UnitGenAnimLock = false;
 var tier1UnitGenFlavorAnimation;
 
+export function checkForAffordablePurchase() {
+    var shopLink = $("#shopLink");
+
+    var purchaseAvailable = (
+        (save.generation.firstClickDoublers < constants.MAX_FIRST_CLICK_DOUBLER && save.currencies.units >= currentFirstClickDoublerPrice)
+        ||
+        (save.generation.tier1UnitGenerators < constants.MAX_TIER_1_UNIT_GENS && save.currencies.units >= currentTier1UnitGenPrice)
+    );
+
+    if (purchaseAvailable) {
+        shopLink.addClass("purchaseAvailable");
+    } else {
+        shopLink.removeClass("purchaseAvailable");
+    }
+}
+
 export function updatetier1UnitGenTexts() {
     if (save.generation.tier1UnitGenerators < constants.MAX_TIER_1_UNIT_GENS) {
         buytier1UnitGenButton.prop("disabled", !(save.currencies.units >= currentTier1UnitGenPrice));

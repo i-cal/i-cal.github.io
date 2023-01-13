@@ -19,7 +19,10 @@ nav {
     margin-right: 3px;
 }
 
-#mainDiv, #shopDiv, #devToDoDiv, #settingsDiv {
+#mainDiv,
+#shopDiv,
+#devToDoDiv,
+#settingsDiv {
     padding: 15px;
 }
 
@@ -64,16 +67,34 @@ small {
     --secondary-color: #222222;
     --text-color: #000000;
     --background-color: #ffffff;
-  }
-  
-  body {
+}
+
+body {
     color: var(--text-color);
     background-color: var(--background-color);
-  }
-  
-  .dark-mode {
+}
+
+.dark-mode {
     --primary-color: #222222;
     --secondary-color: #ffffff;
     --text-color: #ffffff;
     --background-color: #222222;
-  }
+}
+
+.purchaseAvailable {
+    animation: flash 1s linear infinite;
+}
+
+@keyframes flash {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.1;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
