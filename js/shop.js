@@ -4,7 +4,7 @@ import { formatNumberString } from "./settings.js";
 import { updateUnitsPerSecond } from "./tick.js";
 
 /* Outer shop code */
-var doDevPrices = false;
+var doDevPrices = true;
 var devPriceScale = {
     0: 0,
     1: 1,
@@ -130,6 +130,8 @@ export function checkForAffordablePurchase() {
         (save.generation.firstClickDoublers < constants.MAX_FIRST_CLICK_DOUBLER && save.currencies.units >= currentFirstClickDoublerPrice)
         ||
         (save.generation.tier1UnitGenerators < constants.MAX_TIER_1_UNIT_GENS && save.currencies.units >= currentTier1UnitGenPrice)
+        ||
+        (save.generation.firstClickDoublers == constants.MAX_FIRST_CLICK_DOUBLER && save.generation.tier1UnitGenerators == constants.MAX_TIER_1_UNIT_GENS && save.generation.idleRecyclers < constants.MAX_IDLE_RECYCLERS && save.currencies.units >= currentIdleRecyclerPrice)
     );
 
     if (purchaseAvailable) {
