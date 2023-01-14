@@ -52,12 +52,50 @@ export function updateFirstClickDoublerTexts() {
     firstClickDoublersCountText.text(`${save.generation.firstClickDoublers}/${constants.MAX_FIRST_CLICK_DOUBLER}`);
 }
 
-
 function updateFirstClickDoublerPrice() {
     if (doDevPrices) {
         currentFirstClickDoublerPrice = devPriceScale[save.generation.firstClickDoublers];
     } else {
         currentFirstClickDoublerPrice = firstClickDoublerPrices[save.generation.firstClickDoublers];
+    }
+}
+
+// Idle Recycler - not visible until tier 1 gens maxed out
+var idleRecyclerAnimLock = false;
+var idleRecyclerFlavorAnimation;
+var currentIdleRecyclerPrice;
+var idleRecyclerPrices = {
+    0: 94003200,
+    1: 372326400,
+    2: 834969600,
+    3: 1481932800,
+    4: 2313216000
+}
+
+var buyIdleRecyclerButton = $("#buyIdleRecyclerButton");
+var idleRecyclerCountText = $("#idleRecyclerCount");
+var idleRecyclerFlavorText = $("#idleRecyclerFlavorText");
+var idleRecyclerDescriptionText = $("#idleRecyclerDescriptionText");
+
+export function updateIdleRecyclerTexts() {
+    if (save.generation.tier1UnitGenerators == constants.MAX_TIER_1_UNIT_GENS && save.generation.firstClickDoublers == constants.MAX_FIRST_CLICK_DOUBLER) {
+        if (save.generation.idleRecyclers < constants.MAX_IDLE_RECYCLERS) {
+            buyIdleRecyclerButton.prop("disabled", !(save.currencies.units >= currentIdleRecyclerPrice));
+            buyIdleRecyclerButton.text(`Buy (${formatNumberString(currentIdleRecyclerPrice)}u)`);
+        } else {
+            buyIdleRecyclerButton.prop("disabled", true);
+            buyIdleRecyclerButton.text(`Maxed!`);
+        }
+
+        idleRecyclerCountText.text(`${save.generation.idleRecyclers}/${constants.MAX_IDLE_RECYCLERS}`);
+    }
+}
+
+function updateIdleRecyclerPrice() {
+    if (doDevPrices) {
+        currentIdleRecyclerPrice = devPriceScale[save.generation.idleRecyclers];
+    } else {
+        currentIdleRecyclerPrice = idleRecyclerPrices[save.generation.idleRecyclers];
     }
 }
 
@@ -175,8 +213,74 @@ export function initShop() {
                 firstClickDoublerAnimLock = false;
                 clearInterval(firstClickDoublerFlavorAnimation);
             }, 3000);
+
+            if (save.generation.tier1UnitGenerators == constants.MAX_TIER_1_UNIT_GENS && save.generation.firstClickDoublers == constants.MAX_FIRST_CLICK_DOUBLER) {
+                $("#idleRecyclerDiv").slideToggle();
+            }
         }
     });
+
+    // Idle Recyclers
+    if (save.generation.tier1UnitGenerators < constants.MAX_TIER_1_UNIT_GENS || save.generation.firstClickDoublers < constants.MAX_FIRST_CLICK_DOUBLER) {
+        $("#idleRecyclerDiv").hide();
+    } else {
+        $("#idleRecyclerDiv").show();
+    }
+
+    updateIdleRecyclerPrice();
+    updateIdleRecyclerTexts();
+
+    idleRecyclerDescriptionText.text(`Total generation added back into clicks: ${save.generation.idleRecyclers * 10}%`);
+
+    buyIdleRecyclerButton.on("click", function () {
+        // Check if user can afford
+        if (save.currencies.units >= currentIdleRecyclerPrice) {
+            // Subtract cost from units
+            save.currencies.units -= currentIdleRecyclerPrice;
+
+            // Update idle recycler count
+            save.generation.idleRecyclers += 1;
+
+            // Update click power
+            updateRecyclerPower();
+
+            // Update current price
+            updateIdleRecyclerPrice();
+
+            // Update texts
+            updateIdleRecyclerTexts();
+
+            // Update currency text
+            updateCurrencyText();
+
+            // Update description text
+            idleRecyclerDescriptionText.text(`Total generation added back into clicks: ${save.generation.idleRecyclers * 10}%`);
+
+            // Update main page button description
+            $("#unitButtonDescription").text(`${formatNumberString(save.generation.clickPower)} units`);
+
+            // Show flavor text
+            if (idleRecyclerAnimLock) {
+                clearInterval(idleRecyclerFlavorAnimation);
+                idleRecyclerFlavorText.hide();
+            }
+
+            idleRecyclerFlavorText.text(`Click power is now ${formatNumberString(save.generation.clickPower)}u/c!`);
+            idleRecyclerFlavorText.slideDown();
+
+            idleRecyclerAnimLock = true;
+
+            idleRecyclerFlavorAnimation = setInterval(() => {
+                idleRecyclerFlavorText.slideUp();
+                idleRecyclerAnimLock = false;
+                clearInterval(idleRecyclerFlavorAnimation);
+            }, 3000);
+        }
+    });
+
+    function updateRecyclerPower() {
+        save.generation.clickPower = 1024 + ((save.generation.unitsPerSecond) * (save.generation.idleRecyclers / 10));
+    }
 
     // Tier 1 Main Generator
     updatetier1UnitGenPrice();
@@ -220,6 +324,10 @@ export function initShop() {
                 tier1UnitGenAnimLock = false;
                 clearInterval(tier1UnitGenFlavorAnimation);
             }, 3000);
+
+            if (save.generation.tier1UnitGenerators == constants.MAX_TIER_1_UNIT_GENS && save.generation.firstClickDoublers == constants.MAX_FIRST_CLICK_DOUBLER) {
+                $("#idleRecyclerDiv").slideToggle();
+            }
         }
     });
 }

@@ -12,7 +12,7 @@ import { customConsoleLog } from "./settings.js";
 
 // Shop
 // Functions from shop
-import { updateFirstClickDoublerTexts, updatetier1UnitGenTexts, checkForAffordablePurchase } from "./shop.js";
+import { updateFirstClickDoublerTexts, updatetier1UnitGenTexts, checkForAffordablePurchase, updateIdleRecyclerTexts } from "./shop.js";
 
 var tickInterval;
 
@@ -43,6 +43,11 @@ function doTick() {
         // If unbought Tier 1 Main Generators
         if (save.generation.tier1UnitGenerators < constants.MAX_TIER_1_UNIT_GENS) {
             updatetier1UnitGenTexts();
+        }
+
+        // If unbought idle recyclers and max tier 1 gens
+        if (save.generation.idleRecyclers < constants.MAX_IDLE_RECYCLERS && save.generation.tier1UnitGenerators == constants.MAX_TIER_1_UNIT_GENS) {
+            updateIdleRecyclerTexts();
         }
     }
 
