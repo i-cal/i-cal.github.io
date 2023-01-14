@@ -126,6 +126,25 @@
             </div>
         </div>
         <div class="settingsBox">
+            <label for="settingsImportSaveButton">Import/Export Save</label>
+            <div id="settingsImportExportButtonsDiv">
+                <button id="settingsImportSaveButton">Import</button>
+                <button id="settingsExportSaveButton">Export</button>
+                <small id="settingsExportFlavorText" style="display:none;"></small>
+            </div>
+            <div id="settingsImportDiv" style="display:none;">
+                <small>Paste your save text into the box below.</small>
+                <div id="settingsImportTextDiv">
+                    <input type="text" id="settingsImportSaveText">
+                    <button id="settingsImportFinishButton">Import</button>
+                    <button id="settingsImportCancelButton">Cancel</button>
+                </div>
+                <div>
+                    <small id="settingsImportErrorText" style="display:none;"></small>
+                </div>
+            </div>
+        </div>
+        <div class="settingsBox">
             <label for="settingsDarkModeToggle">Dark Mode</label>
             <div>
                 <input type="checkbox" id="settingsDarkModeToggle">

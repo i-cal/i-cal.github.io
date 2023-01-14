@@ -53,6 +53,88 @@ export function initSettings() {
         }, 3000);
     });
 
+    // Import/Export Save
+    var settingsImportExportButtonsDiv = $("#settingsImportExportButtonsDiv");
+    var settingsImportDiv = $("#settingsImportDiv");
+
+    var settingsImportSaveButton = $("#settingsImportSaveButton");
+    var settingsImportFinishButton = $("#settingsImportFinishButton");
+    var settingsImportCancelButton = $("#settingsImportCancelButton");
+    var settingsImportSaveText = $("#settingsImportSaveText");
+
+    var settingsExportSaveButton = $("#settingsExportSaveButton");
+    var settingsExportFlavorText = $("#settingsExportFlavorText");
+    var settingsImportErrorText = $("#settingsImportErrorText");
+
+    settingsImportSaveButton.on("click", function () {
+        settingsImportExportButtonsDiv.slideToggle();
+        settingsImportDiv.slideToggle();
+    });
+
+    settingsImportFinishButton.on("click", function () {
+        try {
+            var newSave = JSON.parse(settingsImportSaveText.val());
+
+            if (compareKeys(save, newSave)) {
+                setCookie("save", JSON.stringify(newSave), 365 * 99);
+                location.reload();
+            } else {
+                settingsImportErrorText.text("Save data could not be imported.");
+                settingsImportErrorText.slideToggle();
+                settingsImportFinishButton.prop("disabled", true);
+                var settingsImportErrorTextAnim = setInterval(() => {
+                    settingsImportErrorText.slideToggle();
+                    clearInterval(settingsImportErrorTextAnim);
+                    settingsImportFinishButton.prop("disabled", false);
+                }, 3000);
+            }
+        } catch (error) {
+            settingsImportErrorText.text("Save data could not be imported.");
+            settingsImportErrorText.slideToggle();
+            settingsImportFinishButton.prop("disabled", true);
+            var settingsImportErrorTextAnim = setInterval(() => {
+                settingsImportErrorText.slideToggle();
+                clearInterval(settingsImportErrorTextAnim);
+                settingsImportFinishButton.prop("disabled", false);
+            }, 3000);
+        }
+    });
+
+    settingsImportCancelButton.on("click", function () {
+        settingsImportExportButtonsDiv.slideToggle();
+        settingsImportDiv.slideToggle(function () {
+            settingsImportSaveText.val("");
+        });
+    });
+
+    settingsExportSaveButton.on("click", function () {
+        copyToClipboard(JSON.stringify(save));
+        settingsExportFlavorText.text("Save data copied to clipboard!");
+        settingsExportFlavorText.slideToggle();
+        settingsExportSaveButton.prop("disabled", true);
+
+        var settingsExportFlavorTextAnim = setInterval(() => {
+            settingsExportFlavorText.slideToggle();
+            clearInterval(settingsExportFlavorTextAnim);
+            settingsExportSaveButton.prop("disabled", false);
+        }, 3000);
+    });
+
+    function compareKeys(obj1, obj2) {
+        var keys1 = Object.keys(obj1).sort();
+        var keys2 = Object.keys(obj2).sort();
+        return (JSON.stringify(keys1) === JSON.stringify(keys2));
+    }
+
+    async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            console.log('Text copied to clipboard');
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    }
+
     // Dark Mode
     var settingsDarkModeToggle = $("#settingsDarkModeToggle");
     var settingsDarkModeFlavorText = $("#settingsDarkModeFlavorText");
