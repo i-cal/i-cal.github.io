@@ -12,13 +12,14 @@ export const constants = {
     MAX_AUTOSAVE_INTERVAL: 30000,
     DEF_AUTOSAVE_INTERVAL: 15000,
     OP_PLS_NERF: 0.75,
-    SAVEFILE_VERSION: 14,
+    SAVEFILE_VERSION: 15,
 
     HOME: "home",
     SHOP: "shop",
     SETTINGS: "settings",
 
     MAX_FIRST_CLICK_DOUBLER: 10,
+    MAX_IDLE_RECYCLERS: 5,
     MAX_TIER_1_UNIT_GENS: 10,
     COMMAS_NUMBER_FORMAT: "commas",
     PERIOD_NUMBER_FORMAT: "periods",
@@ -48,6 +49,7 @@ var starterSave = {
     generation: {
         clickPower: 1,
         firstClickDoublers: 0,
+        idleRecyclers: 0,
         unitsPerSecond: 0,
         baseProdMult: 1,
         tier1UnitGenerators: 0,
@@ -174,9 +176,11 @@ $(function () {
         save.currencies.units += offlineGains;
     }
 
-    function fixSaveFiles(saveData) {
-        // fuck your save (for now)
-        save = starterSave;
+    function fixSaveFiles() {
+        // Version < 15 - IC-12
+        if (save.generation.idleRecyclers == undefined) {
+            save.generation.idleRecyclers = 0;
+        }
     }
 
     // Restore settings from save data
