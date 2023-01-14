@@ -4,7 +4,7 @@ import { formatNumberString } from "./settings.js";
 import { updateUnitsPerSecond } from "./tick.js";
 
 /* Outer shop code */
-var doDevPrices = true;
+var doDevPrices = false;
 var devPriceScale = {
     0: 0,
     1: 1,
