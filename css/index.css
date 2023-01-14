@@ -82,7 +82,7 @@ body {
 }
 
 .purchaseAvailable {
-    animation: flash 1s linear infinite;
+    animation: flash 2.5s normal infinite;
 }
 
 @keyframes flash {
