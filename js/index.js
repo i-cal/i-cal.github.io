@@ -139,7 +139,7 @@ $(function () {
         }
 
         // Offline progression (75% of estimated online, based off of units per second)
-        if (save.settings.OPEnabled) {
+        if (save.settings.OPEnabled && save.generation.unitsPerSecond > 0) {
             calculateOfflineGain();
         }
 
