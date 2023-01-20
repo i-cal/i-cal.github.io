@@ -12,9 +12,11 @@ export const constants = {
     MAX_AUTOSAVE_INTERVAL: 30000,
     DEF_AUTOSAVE_INTERVAL: 15000,
     OP_PLS_NERF: 0.75,
+    RATS_VERSION: 1,
     SAVEFILE_VERSION: 15,
 
     HOME: "home",
+    RATS: "rats",
     SHOP: "shop",
     SETTINGS: "settings",
 
@@ -33,10 +35,12 @@ export var currentPage;
 var pageSwitchLocked = false;
 
 var homeLink = $("#homeLink");
+var ratsLink = $("#ratsLink");
 var shopLink = $("#shopLink");
 var settingsLink = $("#settingsLink");
 
 var homeDiv = $("#mainDiv");
+var ratsDiv = $("#ratsDiv");
 var shopDiv = $("#shopDiv");
 var settingsDiv = $("#settingsDiv");
 
@@ -56,6 +60,12 @@ var starterSave = {
         tier1UnitGeneratorPower: 0,
         tier2UnitGenerators: 0,
         tier3UnitGenerators: 0
+    },
+    rats: {
+        ratPlants: 0,
+        ratEggs: 0,
+        rats: 0,
+        ratsVersion: constants.RATS_VERSION
     },
     lastOpenPage: constants.HOME,
     lastSaved: new Date(),
@@ -202,8 +212,12 @@ $(function () {
 
     // Navbar code
     homeLink.on("click", function () {
-        // Remove active class from all li in nav
         switchToPage(constants.HOME);
+        $(this).parent().addClass("active");
+    });
+
+    ratsLink.on("click", function () {
+        switchToPage(constants.RATS);
         $(this).parent().addClass("active");
     });
 
@@ -240,6 +254,14 @@ $(function () {
                             duration: animLength
                         });
                         break;
+                    case constants.RATS:
+                        ratsDiv.slideToggle({
+                            complete: function() {
+                                doTheShow(animLength);
+                            },
+                            duration: animLength
+                        })
+                        break;
                     case constants.SHOP:
                         shopDiv.slideToggle({
                             complete: function () {
@@ -267,8 +289,13 @@ $(function () {
                     switch (target) {
                         case constants.HOME:
                             customConsoleLog('Switching to Home page.');
-                            homeDiv.parent
                             homeDiv.slideToggle({
+                                duration: animLength
+                            });
+                            break;
+                        case constants.RATS:
+                            customConsoleLog('Switching to Rats page.');
+                            ratsDiv.slideToggle({
                                 duration: animLength
                             });
                             break;
