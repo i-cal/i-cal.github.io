@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+DW+Pica">
+    <link rel="stylesheet" href="test.css">
+    <script src="test.js" defer></script>
+</head>
+
+<body class="dark-mode">
+    To test dialog.
+    <div id="dialogButtonsDiv" style="padding: 30px;">
+        <button id="triggerDialogButton">Trigger Dialog</button>
+    </div>
+    <div id="dialogContainer">
+        <div class="freddy dialog" id="dialogBox" style="display: flex; justify-content: space-between;">
+            <div style="display: flex; flex-direction: row;">
+                <div>
+                    <img class="speaker-image" src="../src/img/rat.png" alt="Freddy">
+                </div>
+                <div>
+                    <h3 style="margin-top:0px;" id="speakerText"></h3>
+                    <p id="dialogText"></p>
+                </div>
+            </div>
+            <div style="align-self: flex-end;">
+                <a class="fa fa-square dialog-tapper"></a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

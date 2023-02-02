@@ -1,0 +1,93 @@
+:root {
+    --primary-color: #ffffff;
+    --secondary-color: #222222;
+    --text-color: #000000;
+    --background-color: #ffffff;
+}
+
+body {
+    color: var(--text-color);
+    background-color: var(--background-color);
+}
+
+.dark-mode {
+    --primary-color: #222222;
+    --secondary-color: #ffffff;
+    --text-color: #ffffff;
+    --background-color: #222222;
+}
+
+.dialog {
+    width: fit-content;
+    min-width: 40vw;
+    max-width: 40vw;
+    border: 3px solid black;
+    border-radius: 20px;
+    background-color: rgba(0, 174, 255, 0.1);
+    padding: 20px;
+}
+
+#dialogContainer {
+    position: absolute;
+    display: flex;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    justify-content: space-around;
+    width: 100vw;
+}
+
+.freddy {
+    font-family: 'IM Fell DW Pica', serif;
+}
+
+.dialog p {
+    font-size: larger;
+}
+
+.speaker-image {
+    animation: rotation 5s ease-in-out infinite;
+    will-change: transform;
+    padding-right: 20px;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(-2deg) scale(0.9);
+    }
+
+    25% {
+        transform: rotate(2deg) scale(1);
+    }
+
+    50% {
+        transform: rotate(-2deg) scale(0.9);
+    }
+
+    75% {
+        transform: rotate(2deg) scale(1);
+    }
+
+    100% {
+        transform: rotate(-2deg) scale(0.9);
+    }
+}
+
+.dialog-tapper {
+    animation: dialogScale 2s normal infinite;
+    will-change: transform;
+}
+
+@keyframes dialogScale {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
