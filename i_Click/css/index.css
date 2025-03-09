@@ -1,0 +1,100 @@
+.finishedDevToDo {
+    text-decoration: line-through;
+}
+
+nav {
+    background-color: #AFAFAF;
+    padding: 10px;
+}
+
+#navPageTitle {
+    font-weight: bold;
+    color: black;
+    text-decoration: none;
+    display: inline;
+}
+
+.navLink {
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+#mainDiv,
+#shopDiv,
+#devToDoDiv,
+#settingsDiv {
+    padding: 15px;
+}
+
+#settingsSaveButton {
+    display: block;
+}
+
+.settingsBox {
+    display: block;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 6px gray;
+    width: 50%;
+}
+
+small {
+    font-style: italic;
+}
+
+.shopBox {
+    display: block;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    box-shadow: 0px 0px 6px gray;
+}
+
+.shopItem {
+    display: block;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 1px black;
+}
+
+:root {
+    --primary-color: #ffffff;
+    --secondary-color: #222222;
+    --text-color: #000000;
+    --background-color: #ffffff;
+}
+
+body {
+    color: var(--text-color);
+    background-color: var(--background-color);
+}
+
+.dark-mode {
+    --primary-color: #222222;
+    --secondary-color: #ffffff;
+    --text-color: #ffffff;
+    --background-color: #222222;
+}
+
+.purchaseAvailable {
+    animation: flash 2.5s normal infinite;
+}
+
+@keyframes flash {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.1;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
