@@ -1,3 +1,3 @@
 # i-cal.github.io
-View the state of development here:
-https://iclick.youtrack.cloud/agiles/141-2/current
+my personal corner of the internet
+weird stuff is gonna happen here but hey nobody is making money off of it
